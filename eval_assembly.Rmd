@@ -61,13 +61,19 @@ plots[[4]] <- logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$larges
 
 plots
 ```
+And now some on genome coverage
+
+```{r}
+logPlot(eval_tbl, eval_tbl$genome_coverage, eval_tbl$genome_fraction, eval_tbl$assembler, xlab=expression('log'[10]*' Genome Coverage'), ylab='Genome fraction [%]', clab='Assembler')
+```
+
 
 Maybe we combine the min_contig_lengths to have a look at assembly length with different cutoffs
 
 ```{r}
 barPlotDodge <- function(data, x, y, fill=NA, xlab, ylab, flab=NA){
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
-    geom_bar(stat = 'identity', position = 'dodge') + 
+    geom_bar(stat = 'summary', fun.y = "mean", position = 'dodge') + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
     scale_fill_viridis(discrete=T, option='viridis') +
@@ -86,7 +92,7 @@ barPlotDodge(tmp_tbl, tmp_tbl$min_length, tmp_tbl$assembly_length, tmp_tbl$assem
 
 barPlot <- function(data, x, y, fill, xlab, ylab){
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
-    geom_bar(stat = 'identity', position = 'dodge') + 
+    geom_bar(stat = 'summary', fun.y = "mean") + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
     scale_fill_viridis(discrete=T, option='viridis') +
@@ -99,14 +105,33 @@ barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$NGA50, fill=eval_tbl$assembler, x
 
 barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$LGA50, fill=eval_tbl$assembler, xlab='Assembler', ylab='LGA50')
 
+barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$misassemblies, fill=eval_tbl$assembler, xlab='Assembler', ylab='# Misassemblies')
+
+barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$genome_fraction, fill=eval_tbl$assembler, xlab='Assembler', ylab='Genome Fraction [%]')
 
 ```
-
-And now some on genome coverage
-
 ```{r}
-logPlot(eval_tbl, eval_tbl$genome_coverage, eval_tbl$genome_fraction, eval_tbl$assembler, xlab=expression('log'[10]*' Genome Coverage'), ylab='Genome fraction [%]', clab='Assembler')
+boxPlot <- function(data, x, y, fill, xlab, ylab){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
+    geom_boxplot() + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw() + 
+    scale_fill_viridis(discrete=T, option='viridis') +
+    labs(x=xlab, y=ylab) + 
+    theme(legend.position="none")
+  return(p)
+}
+
+boxPlot(eval_tbl, eval_tbl$assembler, eval_tbl$NGA50, fill=eval_tbl$assembler, xlab='Assembler', ylab='NGA50 [bp]')
+
+boxPlot(eval_tbl, eval_tbl$assembler, eval_tbl$LGA50, fill=eval_tbl$assembler, xlab='Assembler', ylab='LGA50')
+
+boxPlot(eval_tbl, eval_tbl$assembler, eval_tbl$misassemblies, fill=eval_tbl$assembler, xlab='Assembler', ylab='# Misassemblies')
+
+boxPlot(eval_tbl, eval_tbl$assembler, eval_tbl$genome_fraction, fill=eval_tbl$assembler, xlab='Assembler', ylab='Genome Fraction [%]')
+
 ```
+
 
 
 
