@@ -12,8 +12,9 @@ IDs <- str_replace(tables, '.+_([A-Z]{3,}\\d{3,}).*', '\\1')
 
 df.list <- map(tables, ~ read_tsv(.x, na = c("-", "NA"))) %>%
   map(function(x) {
-  colnames(x) <- c('species', 'V1') 
-  return(x)
+    x <- x[1:2]
+    colnames(x) <- c('species', 'V1')
+    return(x)
   }) %>%
   map( ~ replace_na(.x, list(V1=0)))
   

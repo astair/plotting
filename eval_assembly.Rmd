@@ -10,9 +10,10 @@ Load modules and import the data
 ```{r}
 library(tidyverse)
 setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
-megahit <- read_tsv('quast-results/megahit/megahit_quast_10_25.tsv') %>% print()
-spades <- read_tsv('quast-results/spades/spades_quast_10_25.tsv') %>% print()
-genomes_info <- read_tsv('quast-results/all_metagenomes_info.tsv') %>% print()
+megahit <- read_tsv('results/megahit/megahit-low-500b/megahit_low_500b.tsv') %>% print()
+spades <- read_tsv('results/spades/spades-low-500b/spades_low_500b.tsv') %>% print()
+genomes_info <- read_tsv('results/info_low.tsv') %>% print()
+abundance_low <- read_tsv('results/abundance_low.tsv') %>% print() %>% rename(rel_abundance = V1) %>% print()
 ```
 
 First, let's join them together so our data is tidy
@@ -26,6 +27,7 @@ And join with the genome data
 
 ```{r}
 eval_tbl <- inner_join(assembly_tbl, genomes_info, by = c('species', 'sample'))
+eval_tbl <- inner_join(eval_tbl, abundance_low, by = c('species', 'sample'))
 eval_tbl
 ```
 
@@ -49,22 +51,20 @@ logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$genome_fraction, col
 Now, let's try some other stuff
 
 ```{r}
-plots <- list()
+logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$total_aligned_legnth, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='Total aligned length [bp]', clab='Assembler')
 
-plots[[1]] <- logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$total_aligned_legnth, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='Total aligned length [bp]', clab='Assembler')
+logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$NGA50, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='NGA50 [bp]', clab='Assembler')
 
-plots[[2]] <- logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$NGA50, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='NGA50 [bp]', clab='Assembler')
+logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$LGA50, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='LGA50', clab='Assembler')
 
-plots[[3]] <- logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$LGA50, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='LGA50', clab='Assembler')
-
-plots[[4]] <- logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$largest_contig, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='Largest contig [bp]', clab='Assembler')
-
-plots
+logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$largest_contig, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='Largest contig [bp]', clab='Assembler')
 ```
 And now some on genome coverage
 
 ```{r}
 logPlot(eval_tbl, eval_tbl$genome_coverage, eval_tbl$genome_fraction, eval_tbl$assembler, xlab=expression('log'[10]*' Genome Coverage'), ylab='Genome fraction [%]', clab='Assembler')
+
+logPlot(eval_tbl, eval_tbl$genome_coverage, eval_tbl$total_aligned_legnth, eval_tbl$assembler, xlab=expression('log'[10]*' Genome Coverage'), ylab='Total aligned length [bp]', clab='Assembler')
 ```
 
 
@@ -81,15 +81,6 @@ barPlotDodge <- function(data, x, y, fill=NA, xlab, ylab, flab=NA){
   return(p)
 }
 
-library(stringr)
-tmp_tbl <- eval_tbl %>% 
-  group_by(assembler) %>% 
-  select(total_length_50000bp, total_length_10000bp, total_length_1000bp) %>%
-  gather(key=min_length, value=assembly_length, total_length_50000bp, total_length_10000bp, total_length_1000bp)
-tmp_tbl$min_length <- str_extract(tmp_tbl$min_length, '\\d+')
-
-barPlotDodge(tmp_tbl, tmp_tbl$min_length, tmp_tbl$assembly_length, tmp_tbl$assembler, xlab='Minimum contig length', ylab='Total assembly length', flab='Assembler')
-
 barPlot <- function(data, x, y, fill, xlab, ylab){
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
     geom_bar(stat = 'summary', fun.y = "mean") + 
@@ -101,24 +92,13 @@ barPlot <- function(data, x, y, fill, xlab, ylab){
   return(p)
 }
 
-barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$NGA50, fill=eval_tbl$assembler, xlab='Assembler', ylab='NGA50 [bp]')
-
-barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$LGA50, fill=eval_tbl$assembler, xlab='Assembler', ylab='LGA50')
-
-barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$misassemblies, fill=eval_tbl$assembler, xlab='Assembler', ylab='# Misassemblies')
-
-barPlot(eval_tbl, eval_tbl$assembler, eval_tbl$genome_fraction, fill=eval_tbl$assembler, xlab='Assembler', ylab='Genome Fraction [%]')
-
-```
-```{r}
-boxPlot <- function(data, x, y, fill, xlab, ylab){
-  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
+boxPlot <- function(data, x, y, fill, xlab='x', ylab='y', flab='fill'){
+  p <- ggplot(data=data, aes(x=x, y=log10(y), fill=fill)) + 
     geom_boxplot() + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
     scale_fill_viridis(discrete=T, option='viridis') +
-    labs(x=xlab, y=ylab) + 
-    theme(legend.position="none")
+    labs(x=xlab, y=ylab, fill=flab)
   return(p)
 }
 
@@ -132,14 +112,311 @@ boxPlot(eval_tbl, eval_tbl$assembler, eval_tbl$genome_fraction, fill=eval_tbl$as
 
 ```
 
+Ok, now lets incorporate strain variant data with a stricter contig criterion.
+Again, load the data:
+```{r}
+low_complexity <- read_tsv('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/results/megahit/megahit_ERR1018193/quast-10kb/combined_results.tsv') %>% print()
+med_complexity <- read_tsv('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/results/megahit/megahit_strains_ERR1018193/quast-10kb/combined_results.tsv') %>% print()
+abundance_low <- read_tsv('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/nile/data/specs/abundance-low/ERR1018193.txt', col_names = F) %>% print()
+abundance_med <- read_tsv('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/nile/data/specs/abundance-med/ERR1018193.txt', col_names = F) %>% print()
+colnames(abundance_low) <- c('species', 'rel_abundance')
+colnames(abundance_med) <- c('species', 'rel_abundance')
+abundance_low$sample <- 'ERR1018193'
+abundance_med$sample <- 'ERR1018193'
+
+low_tbl <- low_complexity %>% inner_join(abundance_low, by = c('species', 'sample')) %>% print()
+med_tbl <- med_complexity %>% inner_join(abundance_med, by = c('species', 'sample')) %>% print()
+comb_tbl <- bind_rows(low = low_tbl, medium = med_tbl, .id = 'complexity') %>% print()
+```
+
+And plot it.
+Reformat genome_stats for all genomes to contain the relavant data. Esp. genome_coverage calculated by read_count * av_read_len(77) / genome_len.
+
+```{r}
+setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
+
+nnames <- c('species', 'seq_num', 'assembly_len', 'mean_len', 'longest_contig', 'shortest_contig', 'GC_cont', 'N_cont', 'N50', 'L50')
+
+genome_stats_complex <- read_tsv('nile/data/specs/complex_genomes_stats.txt', col_names = F) %>% rename_all( ~nnames) 
+genome_stats_low <- read_tsv('nile/data/specs/low_genomes_stats.txt', col_names = F) %>% rename_all( ~nnames) 
+genome_stats_med <- read_tsv('nile/data/specs/med_genomes_stats.txt', col_names = F) %>% rename_all( ~nnames) 
+
+seq_counts_complex <- read_tsv('results/counts_complex.tsv') 
+seq_counts_med <- read_tsv('results/counts_med.tsv') 
+seq_counts_low <- read_tsv('results/counts_low.tsv') 
+
+relabu_complex <- read_tsv('results/abundance_complex.tsv') %>% rename('rel_abundance'=V1)
+relabu_med <- read_tsv('results/abundance_med.tsv') %>% rename('rel_abundance'=V1)
+relabu_low <- read_tsv('results/abundance_low.tsv') %>% rename('rel_abundance'=V1)
+
+info_complex <- inner_join(genome_stats_complex, seq_counts_complex) %>% inner_join(relabu_complex) %>% mutate(genome_coverage = (read_count * 77) / assembly_len) %>% print() # %>% write_tsv('results/info_complex.tsv') 
+info_med <- inner_join(genome_stats_med, seq_counts_med) %>% inner_join(relabu_med) %>% mutate(genome_coverage = (read_count * 77) / assembly_len) %>% print() # %>% write_tsv('results/info_med.tsv') 
+info_low <- inner_join(genome_stats_low, seq_counts_low) %>% inner_join(relabu_low) %>% mutate(genome_coverage = (read_count * 77) / assembly_len) %>% print() # %>% write_tsv('results/info_low.tsv') 
+
+info_all <- bind_rows(complex=info_complex, medium=info_med, low=info_low, .id = 'complexity') %>% print() # %>% write_tsv('results/info_all.tsv')
+```
 
 
 
+Integration of strain info and a stricter cutoff (10kb) for contigs to be taken into consideration by quast. Forgot to get the data for low complexity, however. Will do that later. So..
+
+LOAD IT
+
+```{r}
+setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
+megahit_500b_med <- read_tsv('results/megahit/megahit-medium-500b/megahit_medium_500b.tsv') 
+megahit_10kb_med <- read_tsv('results/megahit/megahit-medium-10kb/megahit_medium_10kb.tsv') 
+megahit_500b_complex <- read_tsv('results/megahit/megahit-complex-500b/megahit_complex_500b.tsv') 
+megahit_10kb_complex <- read_tsv('results/megahit/megahit-complex-10kb/megahit_complex_10kb.tsv') 
+megahit_500b_low <- read_tsv('results/megahit/megahit-low-500b/megahit_low_500b.tsv') 
+megahit_10kb_low <- read_tsv('results/megahit/megahit-low-10kb/megahit_low_10kb.tsv') 
+
+spades_500b_med <- read_tsv('results/spades/spades-medium-500b/spades_medium_500b.tsv') 
+spades_10kb_med <- read_tsv('results/spades/spades-medium-10kb/spades_medium_10kb.tsv') 
+spades_500b_complex <- read_tsv('results/spades/spades-complex-500b/spades_complex_500b.tsv') 
+spades_10kb_complex <- read_tsv('results/spades/spades-complex-10kb/spades_complex_10kb.tsv') 
+spades_500b_low <- read_tsv('results/spades/spades-low-500b/spades_low_500b.tsv') 
+spades_10kb_low <- read_tsv('results/spades/spades-low-10kb/spades_low_10kb.tsv') 
+
+med_500b <- bind_rows(MEGAHIT=megahit_500b_med, SPADES=spades_500b_med, .id = 'assembler')
+med_10kb <- bind_rows(MEGAHIT=megahit_10kb_med, SPADES=spades_10kb_med, .id = 'assembler')
+
+complex_500b <- bind_rows(MEGAHIT=megahit_500b_complex, SPADES=spades_500b_complex, .id = 'assembler')
+complex_10kb <- bind_rows(MEGAHIT=megahit_10kb_complex, SPADES=spades_10kb_complex, .id = 'assembler')
+
+low_500b <- bind_rows(MEGAHIT=megahit_500b_low, SPADES=spades_500b_low, .id = 'assembler')
+low_10kb <- bind_rows(MEGAHIT=megahit_10kb_low, SPADES=spades_10kb_low, .id = 'assembler')
+
+med <- bind_rows('500b'=med_500b, '10kb'=med_10kb, .id = 'cutoff')
+complex <- bind_rows('500b'=complex_500b, '10kb'=complex_10kb, .id = 'cutoff')
+low <- bind_rows('500b'=low_500b, '10kb'=low_10kb, .id = 'cutoff')
+
+assembly_mc <- bind_rows(medium=med, complex=complex, low=low, .id = 'complexity')
+
+assembly_info_mc <- inner_join(assembly_mc, info_all) %>% print()
+```
+
+Nice, thats looking good so far, now plot it.
+
+```{r}
+magma <- c('#424949', '#F9A825', '#CD3F0A', '#8A023C')
+
+boxPlot2 <- function(data, x, y, fill, xlab='x', ylab='y', flab='fill'){
+  p <- ggplot(data=data, aes(x=x, y=log10(y), fill=fill)) + 
+    geom_boxplot(notch=F) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw() + 
+    # scale_fill_manual(values=magma[2:4])
+    scale_fill_viridis(discrete=T, option='viridis') +
+    labs(x=xlab, y=ylab, fill=flab)
+  return(p)
+}
+
+comp_order <- c('low', 'medium', 'complex')
+assembly_info_mc$complexity <- factor(assembly_info_mc$complexity, levels = comp_order)
+assembly_info_mc <- assembly_info_mc %>% arrange(desc(complexity))
+
+this <- assembly_info_mc %>% filter(cutoff == '500b')
+boxPlot2(this, this$assembler, this$genome_fraction, fill=this$complexity, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity')
+boxPlot2(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity')
+
+this <- assembly_info_mc %>% filter(cutoff == '10kb')
+boxPlot2(this, this$assembler, this$genome_fraction, fill=this$complexity, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity')
+boxPlot2(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity')
 
 
+```
+
+```{r}
+qqPlot <- function(data, sample, shape='a', col=sample, xlab='x', ylab='y',slab='shape', clab='color'){
+  p <-ggplot(data=data, aes(col=col, shape=shape)) + 
+    geom_qq(aes(sample = genome_fraction), distribution = stats::qnorm) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw() + 
+    scale_color_viridis(discrete=T, option='viridis') +
+    labs(x=xlab, y=ylab, col=clab)
+  return(p)
+}
+
+this <- assembly_info_mc %>% filter(cutoff == '500b')
+
+qqPlot(this, this$genome_fraction, col=this$assembler, xlab='Theoretical', ylab='Genome fraction [%]', clab='Complexity')
+
+qqPlot(this, this$genome_fraction, col=this$complexity, xlab='Theoretical', ylab='Genome fraction [%]', clab='Complexity')
+
+qqPlot(this, this$genome_fraction, shape=this$assembler, col=this$complexity, xlab='Theoretical', ylab='Genome fraction [%]', clab='Complexity')
+```
+
+QQPlot with sample vs sample
+
+```{r}
+qqPlotSS <- function(x=c(), y=c(), colors=c(), variable, split, ylab='y', xlab='x', legend_title='Legend', legend_labels=c(), dist){
+  x_sep <- x %>% select_(variable, split) %>% group_by_(split) %>% do(data_frame(quantile(.[[variable]], dist))) 
+  y_sep <- y %>% select_(variable, split) %>% group_by_(split) %>% do(data_frame(quantile(.[[variable]], dist)))
+  xy_tbl <- bind_cols(x_sep, y_sep)[,c(1, 2, 4)] %>% print()
+  names(xy_tbl) <- c('c', 'x', 'y')
+ 
+  p <- ggplot(xy_tbl) +
+    geom_point(aes(x = x, y = y, color = c)) + 
+    theme_bw() +
+    geom_abline(slope=1, linetype=2) +
+    # scale_color_manual(values=colors) + 
+    scale_color_viridis(discrete=T, option='viridis') +
+    labs(x = xlab, y = ylab)
+
+  return(p)
+}
+
+magma <- c('#424949', '#F9A825', '#CD3F0A', '#8A023C')
+nq <- 1000
+p <- (1 : nq) / nq - 0.5 / nq
+
+this <- assembly_info_mc %>% filter(cutoff == '500b')
+that <- this
+that$complexity <- 'all'
+this <- this %>% bind_rows(that)
+this$complexity <- factor(this$complexity, levels=c('all', 'low', 'medium', 'complex'))
+mega <- this %>% filter(assembler == 'MEGAHIT')
+spades <- this %>% filter(assembler == 'SPADES')
+
+qqPlotSS(x=mega, y=spades, variable='genome_fraction', split='complexity', colors=magma, xlab='Megahit quantiles', ylab='Spades quantiles', dist=p, legend_title='Complexity', legend_labels=c('all', 'low', 'medium', 'complex'))
+
+```
+
+Empirical Cumulative Distribution Function for SPADES and MEGAHIT
+
+```{r}
+ecdfPlot <- function(data, x, line='1', col='#424949', xlab='x', ylab='y',llab='line', clab='color'){
+  p <-ggplot(data=data, aes(x=x, col=col, linetype=line)) + 
+    stat_ecdf(size=1) + 
+    theme_bw() + 
+    # scale_color_manual(values=magma[2:4]) +
+    scale_color_viridis(discrete=T, option='viridis') +
+    labs(x=xlab, y=ylab, col=clab, line=llab) + 
+    coord_flip()
+  return(p)
+}
+
+ecdfPlot(this, this$genome_fraction, col=this$assembler)
+ecdfPlot(this, this$genome_fraction, col=this$complexity, line=this$assembler)
+ecdfPlot(this, log10(this$LGA50), col=this$complexity, line=this$assembler)
+ecdfPlot(this, log10(this$NGA50), col=this$complexity, line=this$assembler)
+ecdfPlot(this, log10(this$misassemblies), col=this$complexity, line=this$assembler)
+ecdfPlot(this, this$total_length_10000bp, col=this$complexity, line=this$assembler)
 
 
+```
+
+Finally I got same data on CONCOCT and LSA. Let's see what we got.
+
+```{r}
+setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
+concoct_500b_med <- read_tsv('results/concoct/concoct-medium-500b/concoct_medium_500b.tsv') 
+concoct_10kb_med <- read_tsv('results/concoct/concoct-medium-10kb/concoct_medium_10kb.tsv') 
+
+lsa_500b_med <- read_tsv('results/lsa/lsa-medium-500b/lsa_medium_500b.tsv') 
+lsa_10kb_med <- read_tsv('results/lsa/lsa-medium-10kb/lsa_medium_10kb.tsv') 
+
+concoct <- bind_rows('500b'=concoct_500b_med, '10kb'=concoct_10kb_med, .id = 'cutoff')
+lsa <- bind_rows('500b'=lsa_500b_med, '10kb'=lsa_10kb_med, .id = 'cutoff')
+
+binning_tbl <- bind_rows('LSA'=lsa, 'CONCOCT'=concoct, .id = 'assembler')
+binning_tbl$complexity <- 'medium'
+
+binning_info <- inner_join(binning_tbl, info_all) %>% print()
+as_bin_tbl <- bind_rows(assembly_info_mc, binning_info) %>% print()
+
+comp_order <- c('low', 'medium', 'complex')
+as_bin_tbl$complexity <- factor(as_bin_tbl$complexity, levels = comp_order)
+as_bin_tbl <- as_bin_tbl %>% arrange(desc(complexity))
+```
+```{r}
+this <- as_bin_tbl %>% filter(cutoff == '500b', complexity == 'medium')
+
+this <- as_bin_tbl %>% mutate(abundance_bins=cut(rel_abundance, breaks=c(-Inf, 0.00001, 0.0001, 0.001, 0.01, 0.1, +Inf), labels=c('< 0.00001', '0.00001 - 0.0001', '0.0001 - 0.001', '0.001 - 0.01', '0.01 - 0.1', '> 0.1'))) 
+boxPlot2(this, this$assembler, this$genome_fraction, fill=this$abundance_bins, xlab='Assembler', ylab='Genome fraction [%]', flab='Relative Abundance')
+boxPlot2(this, this$abundance_bins, this$genome_fraction, fill=this$assembler, xlab='Relative Abundance', ylab='Genome fraction [%]', flab='Assembler')
+
+this <- as_bin_tbl %>% filter(complexity == 'medium')
+boxPlot2(this, this$assembler, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity')
+
+ecdfPlot(this, this$genome_fraction, col=this$assembler)
+ecdfPlot(this, log10(this$LGA50), col=this$assembler)
+ecdfPlot(this, log10(this$NGA50), col=this$assembler)
+ecdfPlot(this, this$total_length_10000bp, col=this$assembler)
+```
+```{r}
+this <- as_bin_tbl %>% filter(complexity == 'medium')
+logPlot(this, this$genome_coverage, this$genome_fraction, this$assembler, xlab=expression('log'[10]*' Genome Coverage'), ylab='Genome fraction [%]', clab='Assembler')
+
+setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
+concoct_counts_medium <- read_tsv('results/concoct/concoct_medium_10_count.tsv')
+lsa_counts_medium <- read_tsv('results/lsa/lsa_medium_30_count.tsv')
+
+barPlotCount <- function(data, x, y, fill, xlab, ylab){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
+    geom_bar(stat = 'identity') + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw() + 
+    scale_fill_viridis(discrete=T, option='viridis') +
+    labs(x=xlab, y=ylab) + 
+    theme(legend.position="none")
+  return(p)
+}
+
+this <- concoct_counts_medium %>% filter(sample %in% c('SAMEA3136631'))
+barPlotCount(this, this$cluster, this$read_count, fill=this$species, xlab='Cluster', ylab='Read Abundance')
+barPlotCount(this, this$cluster, this$read_abundance, fill=this$species, xlab='Cluster', ylab='Read Abundance')
+
+this <- lsa_counts_medium %>% filter(sample %in% c('SAMEA3136631'))
+barPlotCount(this, this$cluster, this$read_count, fill=this$species, xlab='Cluster', ylab='Read Abundance')
+barPlotCount(this, this$cluster, this$read_abundance, fill=this$species, xlab='Cluster', ylab='Read Abundance')
+```
+
+Ok, this seems somewhat reasonable. I guess I'd like to see how this relates to gelative abundance and/or genome coverage. Also, we should decrease the number of clusters to prevent fractionation, which seems to make up for the advantages of enrichment. Especially because the smaller clusters with reads with very lwo abundance are the ones that are most fractionated in LSA. 
+
+But first things first:
+What I actually want to calculate is heterogeneity. Purity is easier though, and also I can plot it with genome coverage and read abundance (!). 
+
+```{r}
+dotPlot <- function(data, x, y, color, xlab, ylab, clab) {
+  p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
+    geom_point(size=2, alpha=0.8) + 
+    theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+    theme_bw() + 
+    scale_color_viridis(discrete=T, option='viridis') + 
+    labs(x=xlab, y=ylab, color=clab)
+  return(p)  
+}
+
+loglogPlot <- function(data, x, y, color, xlab, ylab, clab) {
+  p <- ggplot(data=data, aes(x=log10(x), y=log10(y), color=color)) + 
+    geom_point(size=2, alpha=1) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw() + 
+    scale_color_viridis(discrete=T, option='viridis') + 
+    labs(x=xlab, y=ylab, color=clab)
+  return(p)  
+}
 
 
+binners_counts <- bind_rows(CONCOCT=concoct_counts_medium, LSA=lsa_counts_medium, .id='assembler') %>% rename('read_count_cluster'=read_count, 'read_abundance_cluster'=read_abundance)
+binners_counts$complexity <- 'medium'
+binners_count_info <- inner_join(binners_counts, info_all) %>% group_by(cluster, sample, assembler) %>% 
+  mutate(
+    purity=max(read_abundance_cluster), 
+    cluster_owner=c(species[read_abundance_cluster==purity])[1], 
+    rel_abundance_cluster_owner=rel_abundance[species==cluster_owner]
+    ) %>% 
+  ungroup() %>%
+  group_by(species, sample, assembler) %>%
+  mutate(
+    max_rel_abundance=max(read_abundance_cluster)
+  ) %>%
+  print()
 
-
+this <- binners_count_info %>% filter(assembler=='CONCOCT', rel_abundance>0, max_rel_abundance>0)
+loglogPlot(this, this$rel_abundance, this$max_rel_abundance, this$sample, xlab='Background relative abundance', ylab='Maximum relative abundance in any cluster', clab='Sample')
+this <- binners_count_info %>% filter(assembler=='LSA', rel_abundance>0, max_rel_abundance>0)
+loglogPlot(this, this$rel_abundance, this$max_rel_abundance, this$sample, xlab='Background relative abundance', ylab='Maximum relative abundance in any cluster', clab='Sample')
+```
