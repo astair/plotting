@@ -35,13 +35,13 @@ First, let's try genome_fraction vs relative_abundance and color by species
 
 ```{r}
 library(viridis)
-logPlot <- function(data, x, y, color, xlab, ylab, clab) {
-  p <- ggplot(data=data, aes(x=log10(x), y=y, color=color)) + 
-    geom_point(size=2, alpha=0.8) + 
+logPlot <- function(data, x, y, color='#424949', shape='x', xlab='x', ylab='y', clab='color', slab='shape', alpha=0.8, size=2) {
+  p <- ggplot(data=data, aes(x=log10(x), y=y, color=color, shape=shape)) + 
+    geom_point(size=size, alpha=alpha) + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
     scale_color_viridis(discrete=T, option='viridis') + 
-    labs(x=xlab, y=ylab, color=clab)
+    labs(x=xlab, y=ylab, color=clab, shape=slab)
   return(p)  
 }
 logPlot(data=eval_tbl, x=eval_tbl$rel_abundance, y=eval_tbl$genome_fraction, color=eval_tbl$assembler, xlab=expression('log'[10]*' Relative Abundance'), ylab='Genome Fraction [%]', clab='Assembler')
@@ -419,4 +419,55 @@ this <- binners_count_info %>% filter(assembler=='CONCOCT', rel_abundance>0, max
 loglogPlot(this, this$rel_abundance, this$max_rel_abundance, this$sample, xlab='Background relative abundance', ylab='Maximum relative abundance in any cluster', clab='Sample')
 this <- binners_count_info %>% filter(assembler=='LSA', rel_abundance>0, max_rel_abundance>0)
 loglogPlot(this, this$rel_abundance, this$max_rel_abundance, this$sample, xlab='Background relative abundance', ylab='Maximum relative abundance in any cluster', clab='Sample')
+```
+
+
+Now the fun starts...let's fiddle with strains. Yay.
+
+```{r}
+setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
+reps <- read_tsv('nile/data/specs/stuff/freeze_representatives_proper.txt', col_names = F) %>% print()
+progenomes <- read_tsv('nile/data/specs/stuff/progenomes_rep.combinedVsearch2.50p.20n.20dist.96.5.clustering_2.map.specIv2_2', col_names = F) %>% print()
+mapids <- read_tsv('nile/data/specs/stuff/map_genomes-to-specI_id', col_names = F) %>% print()
+
+med <- read_tsv('nile/data/specs/med.txt', col_names = F) %>% print()
+complex <- read_tsv('nile/data/specs/complex.txt', col_names = F) %>% print()
+
+for (spec in complex$X1){
+  print(mapids$X2[mapids$X1==spec])
+}
+
+strains_tbl_1 <- c()
+strains_tbl_2 <- c()
+for (spec in complex$X1){
+  print(spec)
+  if (spec %in% reps$X1){
+    r <- spec
+    row <- c(spec, 'representative', spec)
+    names(row) <- c('species', 'status', 'representative')
+    strains_tbl_2 <- bind_rows(strains_tbl_2, row)
+  } else {
+    row <- c(spec, 'strain', r)
+    names(row) <- c('species', 'status', 'representative')
+    strains_tbl_2 <- bind_rows(strains_tbl_2, row)
+    row <- c(r, spec)
+    names(row) <- c('representative', 'strain')
+    strains_tbl_1 <- bind_rows(strains_tbl_1, row)
+  }
+}
+
+# strains_tbl_1 %>% print() %>% write_tsv('nile/data/specs/strains_mapping_1.txt')
+# strains_tbl_2 %>% print() %>% write_tsv('nile/data/specs/strains_mapping_2.txt')
+```
+
+Finally, that took way too long. Now let's have some fun with it.
+
+```{r}
+as_bin_tbl <- inner_join(as_bin_tbl, strains_tbl_2)
+
+this <- as_bin_tbl %>% filter(complexity %in% c('medium', 'low'), assembler=='MEGAHIT', genome_coverage>0, cutoff=='10kb', sample=='SAMEA3136644')
+logPlot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Genome Coverage', ylab='Genome Fraction', clab='Species')
+
+this <- as_bin_tbl %>% filter(complexity %in% c('medium', 'low'), assembler=='MEGAHIT', genome_coverage>10, cutoff=='10kb', sample=='SAMEA3136644', representative %in% c('357276.PRJNA232731', '1121115.PRJNA195783', '245018.PRJNA45957', '411479.PRJNA18195', '1680.PRJNA240293', '657322.PRJNA39151'))
+logPlot(this, this$genome_coverage, this$genome_fraction, this$representative, this$complexity, xlab='Genome Coverage', ylab='Genome Fraction', clab='Species', alpha=1, size=4)
 ```
