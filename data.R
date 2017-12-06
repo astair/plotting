@@ -100,22 +100,24 @@ concoct_500b_med <- read_tsv(
     'results/concoct/concoct-medium-500b/concoct_medium_500b.tsv') 
 concoct_10kb_med <- read_tsv(
     'results/concoct/concoct-medium-10kb/concoct_medium_10kb.tsv') 
-lsa_500b_med <- read_tsv('results/lsa/lsa-medium-500b/lsa_medium_500b.tsv') 
-lsa_10kb_med <- read_tsv('results/lsa/lsa-medium-10kb/lsa_medium_10kb.tsv')
+lsa_500b_med <- read_tsv('results/lsa/lsa_55/lsa-medium-500b/lsa_medium_500b.tsv') 
+lsa_10kb_med <- read_tsv('results/lsa/lsa_55/lsa-medium-10kb/lsa_medium_10kb.tsv')
+lsa_500b_33_med <- read_tsv('results/lsa/lsa_33/500b/lsa_medium_33_500b.tsv') 
+lsa_10kb_33_med <- read_tsv('results/lsa/lsa_33/10kb/lsa_medium_33_10kb.tsv')
 
 concoct <- bind_rows('500b'=concoct_500b_med, '10kb'=concoct_10kb_med, .id = 'cutoff')
 lsa <- bind_rows('500b'=lsa_500b_med, '10kb'=lsa_10kb_med, .id = 'cutoff')
+lsa_33 <- bind_rows('500b'=lsa_500b_33_med, '10kb'=lsa_10kb_33_med, .id = 'cutoff')
 
-binning_tbl <- bind_rows('LSA'=lsa, 'CONCOCT'=concoct, .id = 'assembler')
+binning_tbl <- bind_rows('LSA_55'=lsa, 'LSA_33'=lsa_33, 'CONCOCT'=concoct, .id = 'assembler')
 binning_tbl$complexity <- 'medium'
 
-binning_info <- inner_join(binning_tbl, info_all) %>% print()
-as_bin_tbl <- bind_rows(assembly_info_mc, binning_info) %>% print()
-
-concoct_counts_medium <- read_tsv('results/concoct/concoct_medium_10_count.tsv')
-lsa_counts_medium <- read_tsv('results/lsa/lsa_medium_30_count.tsv')
+as_bin_tbl <- bind_rows(assembly_info_mc, binning_info) 
 
 ### Trying to calculate putity or something ###
+concoct_counts_medium <- read_tsv('results/concoct/concoct_medium_10_count.tsv')
+lsa_counts_medium <- read_tsv('results/lsa/lsa_55/lsa_medium_30_count.tsv')
+
 binners_counts <- bind_rows(CONCOCT=concoct_counts_medium, LSA=lsa_counts_medium, .id='assembler') %>% rename('read_count_cluster'=read_count, 'read_abundance_cluster'=read_abundance)
 binners_counts$complexity <- 'medium'
 binners_count_info <- inner_join(binners_counts, info_all) %>% group_by(cluster, sample, assembler) %>% 

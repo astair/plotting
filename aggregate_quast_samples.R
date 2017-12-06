@@ -9,6 +9,7 @@ tables <- args[0:(length(args) - 1)]
 out.path <- args[length(args)]
 
 IDs <- str_replace(tables, '.+_([A-Z]{3,}\\d{3,}).*', '\\1')
+print(IDs)
 
 df.list <- map(tables, ~ read_tsv(.x, na = c("-", "NA"))) %>%
   map(function(x) {
