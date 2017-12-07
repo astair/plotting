@@ -47,30 +47,30 @@ info_all <- bind_rows(complex=info_complex, medium=info_med, low=info_low, .id =
 ### SINGLE SAMPLE ASSEMBLY ###
 
 megahit_500b_med <- read_tsv(
-    'results/new/megahit_medium_500b.tsv') 
+    'results/final/megahit_medium_500b.tsv') 
 megahit_10kb_med <- read_tsv(
-    'results/new/megahit_medium_10kb.tsv') 
+    'results/final/megahit_medium_10kb.tsv') 
 megahit_500b_complex <- read_tsv(
-    'results/new/megahit_complex_500b.tsv') 
+    'results/final/megahit_complex_500b.tsv') 
 megahit_10kb_complex <- read_tsv(
-    'results/new/megahit_complex_10kb.tsv') 
+    'results/final/megahit_complex_10kb.tsv') 
 megahit_500b_low <- read_tsv(
-    'results/new/megahit_low_500b.tsv') 
+    'results/final/megahit_low_500b.tsv') 
 megahit_10kb_low <- read_tsv(
-    'results/new/megahit_low_10kb.tsv') 
+    'results/final/megahit_low_10kb.tsv') 
 
 spades_500b_med <- read_tsv(
-    'results/new/spades_medium_500b.tsv') 
+    'results/final/spades_medium_500b.tsv') 
 spades_10kb_med <- read_tsv(
-    'results/new/spades_medium_10kb.tsv') 
+    'results/final/spades_medium_10kb.tsv') 
 spades_500b_complex <- read_tsv(
-    'results/new/spades_complex_500b.tsv') 
+    'results/final/spades_complex_500b.tsv') 
 spades_10kb_complex <- read_tsv(
-    'results/new/spades_complex_10kb.tsv') 
+    'results/final/spades_complex_10kb.tsv') 
 spades_500b_low <- read_tsv(
-    'results/new/spades_low_500b.tsv') 
+    'results/final/spades_low_500b.tsv') 
 spades_10kb_low <- read_tsv(
-    'results/new/spades_low_10kb.tsv') 
+    'results/final/spades_low_10kb.tsv') 
 
 med_500b <- bind_rows(
     MEGAHIT=megahit_500b_med, SPADES=spades_500b_med, .id = 'assembler')
@@ -99,22 +99,22 @@ ss_assembly_info <- inner_join(ss_assembly, info_all)
 ### BINNERS ###
 
 concoct_500b_med <- read_tsv(
-    'results/new/concoct_medium_500b.tsv') 
+    'results/final/concoct_medium_500b.tsv') 
 concoct_10kb_med <- read_tsv(
-    'results/new/concoct_medium_10kb.tsv') 
-lsa_500b_med <- read_tsv('results/new/lsa_medium_55_500b.tsv') 
-lsa_10kb_med <- read_tsv('results/new/lsa_medium_55_10kb.tsv')
-lsa_500b_33_med <- read_tsv('results/new/lsa_medium_33_500b.tsv') 
-lsa_10kb_33_med <- read_tsv('results/new/lsa_medium_33_10kb.tsv')
-lsa_500b_15_med <- read_tsv('results/new/lsa_medium_15_500b.tsv') 
-lsa_10kb_15_med <- read_tsv('results/new/lsa_medium_15_10kb.tsv')
+    'results/final/concoct_medium_10kb.tsv') 
+lsa_500b_med <- read_tsv('results/final/lsa_medium_55_500b.tsv') 
+lsa_10kb_med <- read_tsv('results/final/lsa_medium_55_10kb.tsv')
+lsa_500b_33_med <- read_tsv('results/final/lsa_medium_33_500b.tsv') 
+lsa_10kb_33_med <- read_tsv('results/final/lsa_medium_33_10kb.tsv')
+# lsa_500b_15_med <- read_tsv('results/final/lsa_medium_15_500b.tsv') 
+# lsa_10kb_15_med <- read_tsv('results/final/lsa_medium_15_10kb.tsv')
 
 concoct <- bind_rows('500b'=concoct_500b_med, '10kb'=concoct_10kb_med, .id = 'cutoff')
 lsa <- bind_rows('500b'=lsa_500b_med, '10kb'=lsa_10kb_med, .id = 'cutoff')
 lsa_33 <- bind_rows('500b'=lsa_500b_33_med, '10kb'=lsa_10kb_33_med, .id = 'cutoff')
-lsa_15 <- bind_rows('500b'=lsa_500b_15_med, '10kb'=lsa_10kb_15_med, .id = 'cutoff')
+# lsa_15 <- bind_rows('500b'=lsa_500b_15_med, '10kb'=lsa_10kb_15_med, .id = 'cutoff')
 
-binned_assembly <- bind_rows('LSA_55'=lsa, 'LSA_33'=lsa_33, 'LSA_15'=lsa_15, 'CONCOCT'=concoct, .id = 'assembler')
+binned_assembly <- bind_rows('LSA_55'=lsa, 'LSA_33'=lsa_33, 'CONCOCT'=concoct, .id = 'assembler')
 binned_assembly$complexity <- 'medium'
 
 binned_assembly_info <- inner_join(binned_assembly, info_all, .by=c(sample, species))
@@ -123,8 +123,8 @@ the_total_tbl <- bind_rows(ss_assembly_info, binned_assembly_info) %>% rename('t
 
 
 ### Trying to calculate putity or something ###
-concoct_counts_medium <- read_tsv('results/new/concoct_medium_10_count.tsv')
-lsa_counts_medium <- read_tsv('results/new/lsa_medium_55_count.tsv')
+concoct_counts_medium <- read_tsv('results/final/concoct_medium_10_count.tsv')
+lsa_counts_medium <- read_tsv('results/final/lsa_medium_55_count.tsv')
 
 binners_counts <- bind_rows(CONCOCT=concoct_counts_medium, LSA=lsa_counts_medium, .id='assembler') %>% rename('read_count_cluster'=read_count, 'read_abundance_cluster'=read_abundance)
 binners_counts$complexity <- 'medium'

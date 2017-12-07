@@ -5,7 +5,7 @@ library(ggbeeswarm)
 magma <- c('#424949', '#F9A825', '#CD3F0A', '#8A023C')
 redtogreen <- c('#550527', '#A10702', '#F44708', '#F9A113', '#599124')
 greentored <- c('#599124' , '#F9A113', '#F44708', '#A10702', '#550527')
-material <- c('#15889C', '#ED496F', '#8E1382', '#C62828', '#FFB300', '#FF6F00', '#43A047')
+material <- c('#15889C', '#ED496F', '#8E1382', '#C62828', '#FFB300', '#43A047', '#FF6F00')
 vibrant <- c('#95190C', '#FFB300', '#1F7530', '#086788', '#6300B5', '#EF8737', '#550527')
 blass <- c('#e67e22', '#c0392b', '#6c3483', '#2471a3', '#229954', '#d4ac0d')
 magenta <- c('#D96DED', '#6300B5', '#8E1382', '#ED496F', '#FF9D7C')
@@ -55,9 +55,9 @@ randombeePlot <- function(data, x, y, color, alpha=1, box=FALSE, xlab, ylab, cla
     theme_bw() + 
     labs(x=xlab, y=ylab, color=clab)
     if (is.null(colorscheme)){
-      p <- p + scale_fill_viridis(discrete=T, option='viridis')
+      p <- p + scale_color_viridis(discrete=T, option='viridis')
     } else {
-      p <- p + scale_fill_manual(values=colorscheme)
+      p <- p + scale_color_manual(values=colorscheme)
     }
     if (box){
       p <- p + stat_boxplot(geom='boxplot', alpha=0.5, outlier.shape=NA, position='dodge', width=0.8)
@@ -142,14 +142,14 @@ qqPlot <- function(data, sample, shape='a', col=sample, xlab='x', ylab='y',slab=
   return(p)
 }
 
-qqPlotSS <- function(x=c(), y=c(), colors=c(), variable, split, ylab='y', xlab='x', clab='c', legend_title='Legend', legend_labels=c(), dist, title='', colorscheme=NULL){
+qqPlotSS <- function(x=c(), y=c(), colors=c(), size=1, variable, split, ylab='y', xlab='x', clab='c', legend_title='Legend', legend_labels=c(), dist, title='', colorscheme=NULL){
   x_sep <- x %>% select_(variable, split) %>% group_by_(split) %>% do(data_frame(quantile(.[[variable]], dist))) 
   y_sep <- y %>% select_(variable, split) %>% group_by_(split) %>% do(data_frame(quantile(.[[variable]], dist)))
   xy_tbl <- bind_cols(x_sep, y_sep)[,c(1, 2, 4)] %>% print()
   names(xy_tbl) <- c('c', 'x', 'y')
  
   p <- ggplot(xy_tbl) +
-    geom_point(aes(x = x, y = y, color = c)) + 
+    geom_point(aes(x = x, y = y, color = c), size=size) + 
     ggtitle(title) +
     theme_bw() +
     geom_abline(slope=1, linetype=2) +
@@ -209,13 +209,13 @@ dotPlotSmooth <- function(data, x, y, color=NULL, xlab='x', ylab='y', clab='colo
 }
 
 logPlot <- function(data, x, y, color='#424949', shape='x', xlab='x', ylab='y', clab='color', slab='shape', alpha=0.8, size=2, title='', colorscheme=NULL){
-  p <- ggplot(data=data, aes(x=x, y=y, color=color, shape=shape)) + 
+  p <- ggplot(data=data, aes(x=x, y=y, color=color), shape=shape) + 
     geom_point(size=size, alpha=alpha) + 
     ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     scale_x_log10() +
     theme_bw() +  
-    labs(x=xlab, y=ylab, color=clab, shape=slab)
+    labs(x=xlab, y=ylab, color=clab)
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option='viridis')
     } else {
