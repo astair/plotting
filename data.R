@@ -119,14 +119,17 @@ binned_assembly$complexity <- 'medium'
 
 binned_assembly_info <- inner_join(binned_assembly, info_all, .by=c(sample, species))
 
-the_total_tbl <- bind_rows(ss_assembly_info, binned_assembly_info) %>% rename('total_aligned_length'=total_aligned_legnth)
+the_total_tbl <- bind_rows(ss_assembly_info, binned_assembly_info) %>% rename('total_aligned_length'=total_aligned_legnth, 'misassembled_contig_length'=missassembled_contigs_length)
 
 
 ### Trying to calculate putity or something ###
 concoct_counts_medium <- read_tsv('results/final/concoct_medium_10_count.tsv')
 lsa_counts_medium <- read_tsv('results/final/lsa_medium_55_count.tsv')
+lsa_33_counts_medium <- read_tsv('results/final/lsa_medium_33_count.tsv')
+lsa_15_counts_medium <- read_tsv('results/final/lsa_medium_15_count.tsv')
 
-binners_counts <- bind_rows(CONCOCT=concoct_counts_medium, LSA=lsa_counts_medium, .id='assembler') %>% rename('read_count_cluster'=read_count, 'read_abundance_cluster'=read_abundance)
+
+binners_counts <- bind_rows(CONCOCT=concoct_counts_medium, LSA_55=lsa_counts_medium, LSA_33=lsa_33_counts_medium, LSA_15=lsa_15_counts_medium, .id='assembler') %>% rename('read_count_cluster'=read_count, 'read_abundance_cluster'=read_abundance)
 binners_counts$complexity <- 'medium'
 binners_count_info <- inner_join(binners_counts, info_all) %>% group_by(cluster, sample, assembler) %>% 
   mutate(
@@ -139,6 +142,7 @@ binners_count_info <- inner_join(binners_counts, info_all) %>% group_by(cluster,
   mutate(
     max_rel_abundance=max(read_abundance_cluster)
   )
+
 
 ### FIDDELING WITH STRAINS ### 
 strains_tbl <- read_tsv('nile/data/specs/strains_mapping_2.txt')

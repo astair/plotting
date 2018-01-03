@@ -1,6 +1,8 @@
 library(viridis)
 library(tidyverse)
 library(ggbeeswarm)
+library(reshape2)
+library(ggdendro)
 
 magma <- c('#424949', '#F9A825', '#CD3F0A', '#8A023C')
 redtogreen <- c('#550527', '#A10702', '#F44708', '#F9A113', '#599124')
@@ -15,9 +17,17 @@ magenta <- c('#D96DED', '#6300B5', '#8E1382', '#ED496F', '#FF9D7C')
 colorful <- c('#9E0031', '#FFBB00', '#198749', '#2D62A3', '#8E1382', '#5A0002')
 flat <- c('#471b9a' , '#ff6f00', '#1565c0', '#43a047', '#ffb300', '#c62828')
 
-many <- c('#9e0031', '#ffbb00', '#198749', '#2d62a3', '#5a0002', '#e67e22', '#c0392b', '#6c3483', '#247177', '#d4ac0d', '#28aae1', '#6300b5', '#88e200', '#012824', '#0d3290', '#ead9d5', '#a347fb', '#54fc7a', '#eb1388', '#03dd14', '#b0978d', '#fe52cf', '#83f1f6', '#f1f847', '#2b1dfc', '#6c6f15', '#6ca05c', '#7788cd', '#f502f3', '#0dc290', '#fa0e03', '#3caa0a', '#befc8d', '#08f8eb', '#b1cd3f', '#d6a5fa', '#ce606c', '#ab1eba', '#6ecc9f', '#054ddc', '#486ff7', '#854f49', '#3a0e43', '#225805', '#37d160', '#e4b974', '#a8bade', '#47edd1', '#f47a92', '#c76cde', '#9106eb', '#81aa20', '#d7fdfd', '#5deb2e', '#f82745', '#6435e0', '#027ffe', '#8e3101', '#16f648', '#1c15bc', '#8be46e', '#8d6fa0', '#e68fc6', '#058ca9', '#9e018a', '#bdfd0b', '#b22760', '#2bf49f', '#cb9348', '#9d8303', '#c251a1', '#46adaf', '#770764', '#a3e3af', '#22bb34', '#6ea3fa', '#260374', '#1c3854', '#405d37', '#c21df3', '#fcea92', '#537f88', '#fd4c18', '#f2d71e', '#fd4c7a')
+many <- c('#9e0031', '#ffbb00', '#198749', '#2d62a3', '#f22B21', '#Ff7708', '#15889C', '#ED49B1', '#8E13A2', '#ead9d5', '#666686', '#CD6155', '#F7DC6F', '#7DCEA0', '#85C1E9', '#EB984E', '#03cd4A', '#CDDC39', '#e0594b', '#c76cde', '#24B177', '#8D6E63', '#486ff7', '#6300b5', '#88e200', '#012824', '#0d3290', '#ead9d5', '#a347fb', '#54fc7a', '#eb1388', '#b0978d', '#fe52cf', '#83f1f6', '#f1f847', '#2b1dfc', '#6c6f15', '#6ca05c', '#7788cd', '#f502f3', '#0dc290', '#fa0e03', '#3caa0a', '#befc8d', '#08f8eb', '#b1cd3f', '#d6a5fa', '#ce606c', '#ab1eba', '#6ecc9f', '#054ddc', '#486ff7', '#854f49', '#3a0e43', '#225805', '#37d160', '#e4b974', '#a8bade', '#47edd1', '#f47a92', '#c76cde', '#9106eb', '#81aa20', '#d7fdfd', '#5deb2e', '#f82745', '#6435e0', '#027ffe', '#8e3101', '#16f648', '#1c15bc', '#8be46e', '#8d6fa0', '#e68fc6', '#058ca9', '#9e018a', '#bdfd0b', '#b22760', '#2bf49f', '#cb9348', '#9d8303', '#c251a1', '#46adaf', '#770764', '#a3e3af', '#22bb34', '#6ea3fa', '#260374', '#1c3854', '#405d37', '#c21df3', '#fcea92', '#537f88', '#fd4c18', '#f2d71e', '#fd4c7a')
 
-barPlot <- function(data, x, y, fill, xlab, ylab, flab, title='', colorscheme=NULL){
+color_gradient <- function(start='white', end='#550527', n=100){
+  return(colorRampPalette(c(start, end))(n))
+}
+
+color_gradient_scrambled <- function(start='white', end='#550527', n=100){
+  return(sample(colorRampPalette(c(start, end))(n)))
+}
+
+bar_plot <- function(data, x, y, fill, xlab, ylab, flab, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
     ggtitle(title) + 
     geom_bar(stat = 'summary', fun.y = "mean") + 
@@ -32,7 +42,7 @@ barPlot <- function(data, x, y, fill, xlab, ylab, flab, title='', colorscheme=NU
   return(p)
 }
 
-beeswarmPlot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, title='', colorscheme=NULL){
+beeswarm_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, color=color, alpha=alpha)) + 
     ggtitle(title) + 
     geom_beeswarm() + 
@@ -47,7 +57,7 @@ beeswarmPlot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, title='',
   return(p)
 }
 
-randombeePlot <- function(data, x, y, color, alpha=1, box=FALSE, xlab, ylab, clab, title='', colorscheme=NULL){
+randombee_plot <- function(data, x, y, color, alpha=1, box=FALSE, xlab, ylab, clab, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     ggtitle(title) + 
     geom_quasirandom(dodge.width=0.8, alpha=alpha) + 
@@ -65,7 +75,7 @@ randombeePlot <- function(data, x, y, color, alpha=1, box=FALSE, xlab, ylab, cla
   return(p)
 }
 
-barPlotDodge <- function(data, x, y, fill=NA, xlab, ylab, flab=NA, title='', colorscheme=NULL){
+bar_plot_dodge <- function(data, x, y, fill=NA, xlab, ylab, flab=NA, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
     geom_bar(stat = 'summary', fun.y = "mean", position = 'dodge') + 
     ggtitle(title) +
@@ -80,54 +90,102 @@ barPlotDodge <- function(data, x, y, fill=NA, xlab, ylab, flab=NA, title='', col
   return(p)
 }
 
-barPlotCount <- function(data, x, y, fill, xlab, ylab, title='', colorscheme=NULL){
-  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
+bar_plot_count <- function(data, x, y, fill, xlab='x', ylab='y', title='', colorscheme=NULL, flegend=TRUE, alegend=FALSE, alpha=NA){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_bar(stat = 'identity') + 
     ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
+    scale_alpha_discrete(range = c(1, 0.3)) + 
     labs(x=xlab, y=ylab) + 
     theme(legend.position="none")
     if (is.null(colorscheme)){
-      p <- p + scale_fill_viridis(discrete=T, option='viridis')
+      p <- p + scale_fill_viridis(discrete=T, option='viridis', na.value='grey')
     } else {
-      p <- p + scale_fill_manual(values=colorscheme)
+      p <- p + scale_fill_manual(values=colorscheme, na.value='grey')
+    }
+    if (!(flegend)){
+      p <- p + guides(fill=FALSE)
+    }
+    if (!(alegend)){
+      p <- p + guides(alpha=FALSE)
     }
   return(p)
 }
 
-boxPlot <- function(data, x, y, fill, xlab='x', ylab='y', flab='fill', title='', colorscheme=NULL){
-  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
-    geom_boxplot() + 
+violin_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y', flab='fill', legend=TRUE, ylim=c(0, NA), title='', colorscheme=NULL){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill), alpha=alpha) + 
+    geom_violin(draw_quantiles=c(0.25, 0.5, 0.75)) + 
+    # stat_summary(fun.y="mean", geom="crossbar", position='dodge', size=1) +
     ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() + 
+    theme_bw() +
+    scale_alpha_discrete(range = c(1, 0.6)) +  
+    scale_y_continuous(limits = ylim) +  
     labs(x=xlab, y=ylab, fill=flab)
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option='viridis')
     } else {
       p <- p + scale_fill_manual(values=colorscheme)
     }
+    if (!(legend)){
+      p <- p + theme(legend.position="none")
+    }
   return(p)
 }
 
-logboxPlot <- function(data, x, y, fill, xlab='x', ylab='y', flab='fill', title='', colorscheme=NULL){
-  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
-    geom_boxplot() + 
+box_plot <- function(data, x, y, fill, alpha=NA, xlab='x', ylab='y', flab='fill', flegend=TRUE, alegend=FALSE, out_size=1.5, ylim=c(0, NA), title='', colorscheme=NULL){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
+    geom_boxplot(outlier.size=out_size) + 
     ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() + 
-    scale_y_log10() +
+    theme_bw() +
+    scale_alpha_discrete(range = c(1, 0.6)) +  
+    scale_y_continuous(limits = ylim) +  
     labs(x=xlab, y=ylab, fill=flab)
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option='viridis')
     } else {
       p <- p + scale_fill_manual(values=colorscheme)
     }
+    if (!(flegend)){
+      p <- p + guides(fill=FALSE)
+    }
+    if (!(alegend)){
+      p <- p + guides(alpha=FALSE)
+    }
   return(p)
 }
 
-qqPlot <- function(data, sample, shape='a', col=sample, xlab='x', ylab='y',slab='shape', clab='color', title='', colorscheme=NULL){
+logbox_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y', flab='fill', flegend=TRUE, alegend=FALSE, out_size=1.5, ylim=c(NA, 1), blank_x=FALSE, title='', colorscheme=NULL){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
+    geom_boxplot(outlier.size=out_size) + 
+    ggtitle(title) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw() +
+    scale_alpha_discrete(range = c(1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3)) +  
+    scale_y_log10(limits = ylim) +
+    labs(x=xlab, y=ylab, fill=flab)
+    if (is.null(colorscheme)){
+      p <- p + scale_fill_viridis(discrete=T, option='viridis')
+    } else {
+      p <- p + scale_fill_manual(values=colorscheme)
+    }
+    if (!(flegend)){
+      p <- p + guides(fill=FALSE)
+    }
+    if (!(alegend)){
+      p <- p + guides(alpha=FALSE)
+    }
+    if (blank_x){
+      p <- p + theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+    }
+  return(p)
+}
+
+qq_plot <- function(data, sample, shape='a', col=sample, xlab='x', ylab='y',slab='shape', clab='color', title='', colorscheme=NULL){
   p <-ggplot(data=data, aes(col=col, shape=shape)) + 
     ggtitle(title) +
     geom_qq(aes(sample = genome_fraction), distribution = stats::qnorm) + 
@@ -142,7 +200,7 @@ qqPlot <- function(data, sample, shape='a', col=sample, xlab='x', ylab='y',slab=
   return(p)
 }
 
-qqPlotSS <- function(x=c(), y=c(), colors=c(), size=1, variable, split, ylab='y', xlab='x', clab='c', legend_title='Legend', legend_labels=c(), dist, title='', colorscheme=NULL){
+qq_plot_ss <- function(x=c(), y=c(), colors=c(), size=1, variable, split, ylab='y', xlab='x', clab='c', legend_title='Legend', legend_labels=c(), dist, title='', colorscheme=NULL){
   x_sep <- x %>% select_(variable, split) %>% group_by_(split) %>% do(data_frame(quantile(.[[variable]], dist))) 
   y_sep <- y %>% select_(variable, split) %>% group_by_(split) %>% do(data_frame(quantile(.[[variable]], dist)))
   xy_tbl <- bind_cols(x_sep, y_sep)[,c(1, 2, 4)] %>% print()
@@ -162,8 +220,8 @@ qqPlotSS <- function(x=c(), y=c(), colors=c(), size=1, variable, split, ylab='y'
   return(p)
 }
 
-ecdfPlot <- function(data, x, line='1', col='#424949', xlab='x', ylab='y',llab='line', clab='color', title='', colorscheme=NULL){
-  p <-ggplot(data=data, aes(x=x, col=col, linetype=line)) + 
+ecdf_plot <- function(data, x, line='1', col='#424949', xlab='x', ylab='y',llab='line', clab='color', title='', colorscheme=NULL){
+  p <-ggplot(data=data, aes(x=x, col=col), linetype=line) + 
     ggtitle(title) +
     stat_ecdf(size=1) + 
     theme_bw() + 
@@ -177,7 +235,7 @@ ecdfPlot <- function(data, x, line='1', col='#424949', xlab='x', ylab='y',llab='
   return(p)
 }
 
-dotPlot <- function(data, x, y, color, xlab='x', ylab='y', clab='color', alpha=1, size=2, title='', colorscheme=NULL){
+dot_plot <- function(data, x, y, color, xlab='x', ylab='y', clab='color', alpha=1, size=2, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=size, alpha=alpha) + 
     ggtitle(title) +
@@ -185,14 +243,14 @@ dotPlot <- function(data, x, y, color, xlab='x', ylab='y', clab='color', alpha=1
     theme_bw() +  
     labs(x=xlab, y=ylab, color=clab)
     if (is.null(colorscheme)){
-      p <- p + scale_color_viridis(discrete=T, option='viridis')
+      p <- p + scale_color_viridis(discrete=T, option='viridis', na.value='grey')
     } else {
-      p <- p + scale_color_manual(values=colorscheme)
+      p <- p + scale_color_manual(values=colorscheme, na.value='grey')
     }
   return(p)  
 }
 
-dotPlotSmooth <- function(data, x, y, color=NULL, xlab='x', ylab='y', clab='color', alpha=1, se=FALSE, span=0.8, size=2, title='', colorscheme=NULL){
+dot_plot_smooth <- function(data, x, y, color=NULL, xlab='x', ylab='y', clab='color', alpha=1, se=FALSE, span=0.8, size=2, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=size, alpha=alpha) + 
     geom_smooth(span=span, se=se) +
@@ -208,7 +266,7 @@ dotPlotSmooth <- function(data, x, y, color=NULL, xlab='x', ylab='y', clab='colo
   return(p)  
 }
 
-logPlot <- function(data, x, y, color='#424949', shape='x', xlab='x', ylab='y', clab='color', slab='shape', alpha=0.8, size=2, title='', colorscheme=NULL){
+log_plot <- function(data, x, y, color='#424949', shape='x', xlab='x', ylab='y', clab='color', slab='shape', alpha=0.8, size=2, title='', colorscheme=NULL){
   p <- ggplot(data=data, aes(x=x, y=y, color=color), shape=shape) + 
     geom_point(size=size, alpha=alpha) + 
     ggtitle(title) +
@@ -224,16 +282,15 @@ logPlot <- function(data, x, y, color='#424949', shape='x', xlab='x', ylab='y', 
   return(p)  
 }
 
-loglogPlot <- function(data, x, y, color, xlab, ylab, clab, title='', xlims=c(-5, 0), ylims=c(-5, 0), colorscheme=NULL){
+
+loglog_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, colorscheme=NULL) {
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
-    geom_point(size=2, alpha=1) + 
+    geom_point(size=1, alpha=alpha) + 
     ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
-    scale_y_log10() +
-    scale_x_log10() +
-    scale_x_continuous(limits = xlims) + 
-    scale_y_continuous(limits = ylims) +  
+    scale_y_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), limits=c(1e-05, 1)) +
+    scale_x_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), limits=c(1e-05, 1)) +
     labs(x=xlab, y=ylab, color=clab)
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option='viridis')
@@ -241,4 +298,20 @@ loglogPlot <- function(data, x, y, color, xlab, ylab, clab, title='', xlims=c(-5
       p <- p + scale_color_manual(values=colorscheme)
     }
   return(p)  
+}
+
+gather_matrix <- function(data, key, value){
+  reshape2:::melt.matrix(data, varnames=key, value.name=value)
+}
+
+heatmap_plot <- function(data, x, y, fill, xlab='x', ylab='y', flab='fill', colorscheme=NULL){
+  p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) +
+    geom_tile(color='white') + 
+    theme_bw()
+    if (is.null(colorscheme)){
+      p <- p + scale_fill_viridis(option='magma')
+    } else {
+      p <- p + scale_fill_gradiant(low=colorscheme[1], high=colorscheme[2])
+    }
+  return(p)
 }
