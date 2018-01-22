@@ -364,4 +364,30 @@ taxonomy <- read_tsv('nile/data/specs/stuff/specI.taxonomy')
 mapping <- read_tsv('nile/data/specs/top_70_representatives.txt', col_names=F)
 mapping$X1 <- str_replace(mapping$X1, '.*\\{(.*)\\}', '\\1')
 
-taxonomy_tbl <- inner_join(taxonomy, mapping, by=c('specI_cluster'='X1')) %>% select(X3, phylum)
+taxonomy_tbl <- inner_join(taxonomy, mapping, by=c('specI_cluster'='X1')) %>% select(X3, phylum, family)
+
+
+
+### POOLED ASSEMBLY ANALYSIS ###
+
+# lsa_15_500b <- read_tsv('results/new/lsa_15_500b.tsv')
+# lsa_15_10kb <- read_tsv('results/new/lsa_15_10kb.tsv')
+lsa_33_500b <- read_tsv('results/new/lsa_33_500b.tsv')
+lsa_33_10kb <- read_tsv('results/new/lsa_33_10kb.tsv')
+concoct_66_500b <- read_tsv('results/new/concoct_66_500b.tsv')
+concoct_66_10kb <- read_tsv('results/new/concoct_66_10kb.tsv')
+
+megahit_30_samples_500b <- read_tsv('results/new/megahit_30_samples_500b.tsv')
+megahit_30_samples_10kb  <- read_tsv('results/new/megahit_30_samples_10kb.tsv')
+megahit_10_samples_500b  <- read_tsv('results/new/megahit_10_samples_500b.tsv')
+megahit_10_samples_10kb  <- read_tsv('results/new/megahit_10_samples_10kb.tsv')
+
+lsa_33 <- bind_rows('500b'=lsa_33_500b, '10kb'=lsa_33_10kb, .id = 'cutoff')
+concoct_66 <- bind_rows('500b'=concoct_66_500b, '10kb'=concoct_66_10kb, .id = 'cutoff')
+# lsa_15 <- bind_rows('500b'=lsa_15_500b, '10kb'=lsa_15_10kb, .id = 'cutoff')
+megahit_30 <- bind_rows('500b'=megahit_30_samples_500b, '10kb'=megahit_30_samples_10kb, .id = 'cutoff')
+megahit_10 <- bind_rows('500b'=megahit_10_samples_500b, '10kb'=megahit_10_samples_10kb, .id = 'cutoff')
+
+pooled_tbl <- bind_rows(lsa_33, concoct_66, megahit_10, megahit_30) %>% rename('method'=sample, 'total_length_10000'=total_length_1000, 'total_length_1000'=total_length_10000)
+
+# colnames(pooled_tbl)[8:9] <- c('misassembled_contigs_length', 'misassemblies')

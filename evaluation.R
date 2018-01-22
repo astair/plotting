@@ -17,9 +17,9 @@ source('nile/scripts/plotting/data_new.R')
 #     arrange(desc(cluster_sum))
 # this$cluster <- factor(this$cluster, levels = unique(this$cluster))
 
+used_samples <- unique(the_total_tbl$sample)
 
-info <- inner_join(strains_tbl, info_all) %>% inner_join(taxonomy_tbl, by=c('representative'='X3'))
-unique(info$phylum)
+info <- inner_join(strains_tbl, info_all) %>% inner_join(taxonomy_tbl, by=c('representative'='X3')) %>% filter(sample %in% used_samples)
 info$phylum[info$phylum=='NA Bacteroidales fam. [C Bacteroidaceae/Porphyromonadaceae]'] <- 'Bacteroidales'
 info$phylum[info$phylum=='NA Bacteria fam. incertae sedis'] <- 'Incertae sedis'
 info$phylum[info$phylum=='NA Bacteria phylum incertae sedis'] <- 'Incertae sedis'
@@ -27,40 +27,50 @@ info$phylum <- str_replace(info$phylum, '\\d+ (\\w+)', '\\1')
 status_order <- c('representative', 'strain_0', 'strain_1', 'strain_2', 'strain_3', 'strain_4', 'strain_5', 'strain_6')
 info$status <- factor(info$status, levels=status_order)
 
-# pdf("datasets_overview.pdf", width=15, height=5)
+# pdf("datasets_overview.pdf", width=12, height=3)
 
 this <- info %>% 
-    filter(complexity=='low') %>% 
-    group_by(representative) %>%
-    mutate(mean_abundance=median(rel_abundance)) %>%
-    arrange(desc(mean_abundance))
+    filter(complexity=='low') 
+spec_order <- this %>% group_by(representative) %>% summarise(median_abundance=median(rel_abundance)) %>% arrange(desc(median_abundance))
+
+colors <- c('#Ae0031', '#2d62a3', '#ffbb00', '#198749', '#6c3483', '#Ff7708', '#15889C')
+
+this$representative <- factor(this$representative, levels=spec_order$representative)
+this$species <- factor(this$species, levels=unique(this$species))
+this$phylum <- factor(this$phylum, levels=unique(this$phylum))
+
+this <- this %>% filter(representative %in% c('420247.PRJNA18653', '511680.PRJNA28999', '592028.PRJNA33143', '702459.PRJNA42863'))
+
+logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=colors, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
+
+
+
+colors <- c('#Ae0031', '#2d62a3', '#198749', '#ffbb00', '#Ff7708', '#15889C')
+
 this$representative <- factor(this$representative, levels=unique(this$representative))
 this$species <- factor(this$species, levels=unique(this$species))
 this$phylum <- factor(this$phylum, levels=unique(this$phylum))
-logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=many, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
-
-this <- info %>% 
-    filter(complexity=='medium') %>% 
-    group_by(representative) %>%
-    mutate(mean_abundance=median(rel_abundance)) %>%
-    arrange(desc(mean_abundance))
-this$representative <- factor(this$representative, levels=unique(this$representative))
-this$species <- factor(this$species, levels=unique(this$species))
-this$phylum <- factor(this$phylum, levels=unique(this$phylum))
-logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=many, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
+logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=colors, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
 
 this <- info %>% 
     filter(complexity=='complex') %>% 
     group_by(representative) %>%
     mutate(mean_abundance=median(rel_abundance)) %>%
     arrange(desc(mean_abundance))
+
+unique(this$species)
+
+colors <- c('#2d62a3', '#198749', '#Ae0031', '#ffbb00', '#Ff7708', '#6c3483', '#15889C')
+
 this$representative <- factor(this$representative, levels=unique(this$representative))
 this$species <- factor(this$species, levels=unique(this$species))
 this$phylum <- factor(this$phylum, levels=unique(this$phylum))
-logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=many, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
+logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=colors, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
 
 # dev.off()
+min(info$rel_abundance[info$rel_abundance!=0])
 
+length(unique(info$family))
 
 
 
@@ -78,59 +88,81 @@ the_total_tbl <- the_total_tbl %>%
     mutate(misassembled_fraction=(misassembled_contig_length/total_length))
 the_total_tbl <- the_total_tbl %>% 
     mutate(aligned_fraction=(total_aligned_length/total_length))
+the_total_tbl <- the_total_tbl %>% 
+    mutate(mis_fraction=(misassemblies/total_length))
+
 
 # spades_samples <- unique(the_total_tbl$sample[the_total_tbl$assembler=='SPADES'])
 # megahit_samples <- unique(the_total_tbl$sample[the_total_tbl$assembler=='MEGAHIT'])
 # both <- intersect(spades_samples, megahit_samples)
 
 
-# pdf("ss_misassemblies_aligned_500bp_new.pdf", width=6, height=4)
+
+the_total_tbl <- the_total_tbl %>% mutate(miss_gen_bins=cut(misassembled_genome_fraction, breaks=c(0, 0.1, 0.2, 0.3, 0.4), labels=c('0-10', '10-20', '20-30', '30-40'))) 
+the_total_tbl <- the_total_tbl %>% mutate(cov_bins=cut(genome_coverage, breaks=c(-Inf, 10, 50, 200, +Inf), labels=c('0-10', '10-50', '50-200', '>200'))) 
+
+# pdf("ss_misassemblies_box_500bp_new.pdf", width=3.5, height=3)
+
+this <- the_total_tbl %>% filter(cov_bins != '0-10', assembler %in% c('MEGAHIT', 'SPADES'))
+max(this$misassembled_fraction[!this$misassembled_fraction%in%c(NaN, NA)]) 
+
 this <- the_total_tbl %>% filter(cutoff == '500b', complexity == 'low', assembler %in% c('MEGAHIT', 'SPADES'))
-dot_plot_smooth(this, this$misassembled_genome_fraction, this$genome_fraction, this$assembler, span=100, alpha=0.2, xlab='Misassembled genome fraction [%]', ylab='Genome fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Low')
-dot_plot_smooth(this, this$misassembled_fraction, this$aligned_fraction, this$assembler, span=100, alpha=0.2, xlab='Fraction misassembled contig length [%]', ylab='Aligned fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Low')
-dot_plot_smooth(this, this$misassembled_fraction, this$genome_fraction, this$assembler, span=100, alpha=0.2, xlab='Fraction misassembled contig length [%]', ylab='Genome fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Low')
-dot_plot_smooth(this, this$misassembled_genome_fraction, this$aligned_fraction, this$assembler, span=100, alpha=0.2, xlab='Misassembled genome fraction [%]', ylab='Aligned fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Low')
+
+box_plot(this, this$cov_bins, this$misassembled_fraction, this$assembler, xlab='Genome fraction [%]', ylab='Misassembled genome fraction [%]', flab='Assembler', colorscheme=material, title='Low')
+box_plot(this, this$cov_bins, this$mis_fraction, this$assembler, xlab='Genome fraction [%]', ylab='Misassembly frequency', flab='Assembler', colorscheme=material, title='Low', ylim=c(0,0.000025))
+
+# this <- this %>% filter(genome_coverage>1)
+# log_plot(this, this$genome_coverage, this$misassembled_fraction, this$assembler)
+# log_plot(this, this$genome_coverage, this$misassembled_genome_fraction, this$assembler)
+# log_plot(this, this$genome_fraction, this$misassembled_genome_fraction, this$assembler)
+# randombee_plot(this, this$miss_gen_bins, this$genome_fraction, this$assembler, box=TRUE, xlab='Misassembled genome fraction [%]', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material, title='Low', alpha=0.4)
+
+
+this <- the_total_tbl %>% filter(cutoff == '500b', complexity == 'medium', assembler %in% c('MEGAHIT', 'SPADES'))
+
+box_plot(this, this$cov_bins, this$misassembled_fraction, this$assembler, xlab='Genome fraction [%]', ylab='Misassembled genome fraction [%]', flab='Assembler', colorscheme=material, title='Medium')
+# randombee_plot(this, this$miss_gen_bins, this$genome_fraction, this$assembler, box=TRUE, xlab='Misassembled genome fraction [%]', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material, title='Medium', alpha=0.4)
+
+
+this <- the_total_tbl %>% filter(cutoff == '500b', complexity == 'complex', assembler %in% c('MEGAHIT', 'SPADES'))
+
+box_plot(this, this$cov_bins, this$misassembled_fraction, this$assembler, xlab='Genome fraction [%]', ylab='Misassembled genome fraction [%]', flab='Assembler', colorscheme=material, title='Complex')
+# randombee_plot(this, this$miss_gen_bins, this$genome_fraction, this$assembler, box=TRUE, xlab='Misassembled genome fraction [%]', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material, title='Complex', alpha=0.4)
+        
+# dev.off()
+
 
 this <- the_total_tbl %>% filter(cutoff == '500b', complexity == 'medium', assembler %in% c('MEGAHIT', 'SPADES'))
 dot_plot_smooth(this, this$misassembled_genome_fraction, this$genome_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Misassembled genome fraction [%]', ylab='Genome fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Medium')
-dot_plot_smooth(this, this$misassembled_fraction, this$aligned_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Fraction misassembled contig length [%]', ylab='Aligned fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Medium')
-dot_plot_smooth(this, this$misassembled_fraction, this$genome_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Fraction misassembled contig length [%]', ylab='Genome fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Medium')
-dot_plot_smooth(this, this$misassembled_genome_fraction, this$aligned_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Misassembled genome fraction [%]', ylab='Aligned fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Medium')
 
 this <- the_total_tbl %>% filter(cutoff == '500b', complexity == 'complex', assembler %in% c('MEGAHIT', 'SPADES'))
 dot_plot_smooth(this, this$misassembled_genome_fraction, this$genome_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Misassembled genome fraction [%]', ylab='Genome fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Complex')
-dot_plot_smooth(this, this$misassembled_fraction, this$aligned_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Fraction misassembled contig length [%]', ylab='Aligned fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Complex')
-dot_plot_smooth(this, this$misassembled_fraction, this$genome_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Fraction misassembled contig length [%]', ylab='Genome fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Complex')
-dot_plot_smooth(this, this$misassembled_genome_fraction, this$aligned_fraction, this$assembler, span=0.6, alpha=0.2, xlab='Misassembled genome fraction [%]', ylab='Aligned fraction [%]', clab='Assembler', size=1, colorscheme=material, title='Complex')
+
 # dev.off()
 
-#####
 
-### !!!!!!!!   VIOLIN PLOT   !!!!!!!!!!! ######### 
-#####
-
-# pdf("ss_assembly_various_500bp_new.pdf", width=8, height=4)
+# pdf("ss_box_genomefrac_new.pdf", width=4, height=3)
 
 this <- the_total_tbl %>% filter(cutoff == '500b', assembler %in% c('MEGAHIT', 'SPADES'))
-box_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
-box_plot(this, this$complexity, this$misassemblies, fill=this$assembler, xlab='Assembler', ylab='Misassemblies', flab='Complexity', colorscheme=material)
-box_plot(this, this$complexity, this$NGA50, fill=this$assembler, xlab='Assembler', ylab='NGA50', flab='Complexity', colorscheme=material)
-box_plot(this, this$complexity, this$LGA50, fill=this$assembler, xlab='Assembler', ylab='LGA50', flab='Complexity', colorscheme=material)
+# box_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
+# box_plot(this, this$complexity, this$misassemblies, fill=this$assembler, xlab='Assembler', ylab='Misassemblies', flab='Complexity', colorscheme=material)
+# box_plot(this, this$complexity, this$NGA50, fill=this$assembler, xlab='Assembler', ylab='NGA50', flab='Complexity', colorscheme=material)
+# box_plot(this, this$complexity, this$LGA50, fill=this$assembler, xlab='Assembler', ylab='LGA50', flab='Complexity', colorscheme=material)
 
-violin_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
-violin_plot(this, this$complexity, this$misassemblies, fill=this$assembler, xlab='Assembler', ylab='Misassemblies', flab='Complexity', colorscheme=material)
+# violin_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
+# violin_plot(this, this$complexity, this$misassemblies, fill=this$assembler, xlab='Assembler', ylab='Misassemblies', flab='Complexity', colorscheme=material)
 
-randombee_plot(this, this$complexity, this$genome_fraction, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material)
-randombee_plot(this, this$complexity, this$misassemblies, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='Misassemblies', clab='Assembler', colorscheme=material)
-randombee_plot(this, this$complexity, this$NGA50, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='NGA50', clab='Assembler', colorscheme=material)
-randombee_plot(this, this$complexity, this$LGA50, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='LGA50', clab='Assembler', colorscheme=material)
+randombee_plot(this, this$complexity, this$genome_fraction, color=this$assembler, alpha=0.03, xlab='Complexity', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material, median=T) 
+# randombee_plot(this, this$complexity, this$misassemblies, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='Misassemblies', clab='Assembler', colorscheme=material)
+# randombee_plot(this, this$complexity, this$NGA50, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='NGA50', clab='Assembler', colorscheme=material)
+# randombee_plot(this, this$complexity, this$LGA50, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='LGA50', clab='Assembler', colorscheme=material)
 # dev.off()
 
 # pdf("ss_assembly_various_10kb_new.pdf", width=8, height=4)
 this <- the_total_tbl %>% filter(cutoff == '10kb', assembler %in% c('MEGAHIT', 'SPADES'))
-box_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
-violin_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
-randombee_plot(this, this$complexity, this$genome_fraction, color=this$assembler, alpha=0.2, box=T, xlab='Complexity', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material)
+# box_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
+# violin_plot(this, this$complexity, this$genome_fraction, fill=this$assembler, xlab='Assembler', ylab='Genome fraction [%]', flab='Complexity', colorscheme=material)
+randombee_plot(this, this$complexity, this$genome_fraction, color=this$assembler, alpha=0.03, xlab='Complexity', ylab='Genome fraction [%]', clab='Assembler', colorscheme=material, median=T)
 # dev.off()
 
 # this <- the_total_tbl %>% filter(cutoff == '500b')
@@ -145,6 +177,7 @@ randombee_plot(this, this$complexity, this$genome_fraction, color=this$assembler
 # qq_plot(this, this$genome_fraction, col=this$complexity, xlab='Theoretical', ylab='Genome fraction [%]', clab='Complexity', title=title, colorscheme=greentored[c(1,2,4)])
 # qq_plot(this, this$genome_fraction, shape=this$assembler, col=this$complexity, xlab='Theoretical', ylab='Genome fraction [%]', clab='Complexity', title=title, colorscheme=greentored[c(1,2,4)])
 
+# pdf("ss_genomefrac_QQ.pdf", width=4.5, height=3)
 
 nq <- 1000
 p <- (1 : nq) / nq - 0.5 / nq
@@ -154,10 +187,27 @@ this$complexity <- factor(this$complexity, levels=order_vec)
 mega <- this %>% filter(assembler == 'MEGAHIT')
 spades <- this %>% filter(assembler == 'SPADES')
 
-# pdf("ss_assembly_QQ_500bp.pdf", width=6, height=4)
+title <- 'Genome Fraction'
+qq_plot_ss(x=mega, y=spades, variable='genome_fraction', split='complexity', xlab='Megahit quantiles', ylab='Spades quantiles', clab='Complexity', dist=p, legend_title='Complexity', legend_labels=c('low', 'medium', 'complex'), title=title, colorscheme=three)
+
+
+nq <- 1000
+p <- (1 : nq) / nq - 0.5 / nq
+this <- the_total_tbl %>% filter(cutoff == '10kb')
+order_vec <- c('low', 'medium', 'complex')
+this$complexity <- factor(this$complexity, levels=order_vec)
+mega <- this %>% filter(assembler == 'MEGAHIT')
+spades <- this %>% filter(assembler == 'SPADES')
 
 title <- 'Genome Fraction'
-qq_plot_ss(x=mega, y=spades, variable='genome_fraction', split='complexity', colors=magma, xlab='Megahit quantiles', ylab='Spades quantiles', clab='Complexity', dist=p, legend_title='Complexity', legend_labels=c('low', 'medium', 'complex'), title=title, colorscheme=material)
+qq_plot_ss(x=mega, y=spades, variable='genome_fraction', split='complexity', xlab='Megahit quantiles', ylab='Spades quantiles', clab='Complexity', dist=p, legend_title='Complexity', legend_labels=c('low', 'medium', 'complex'), title=title, colorscheme=three)
+
+
+# dev.off()
+
+
+
+
 
 title <- 'Misassemblies'
 qq_plot_ss(x=mega, y=spades, variable='misassemblies', split='complexity', colors=magma, xlab='Megahit quantiles', ylab='Spades quantiles', clab='Complexity', dist=p, legend_title='Complexity', legend_labels=c('low', 'medium', 'complex'), title=title, colorscheme=material)
@@ -214,28 +264,44 @@ the_total_tbl$complexity <- factor(the_total_tbl$complexity, levels=order_vec)
 # this <- the_total_tbl %>% filter(complexity %in% c('medium', 'low'), assembler=='MEGAHIT', genome_coverage>10, cutoff=='10kb', sample=='SAMEA3136644', representative %in% c('357276.PRJNA232731', '1121115.PRJNA195783', '245018.PRJNA45957', '411479.PRJNA18195', '1680.PRJNA240293', '657322.PRJNA39151'))
 # log_plot(this, this$genome_coverage, this$genome_fraction, this$representative, this$complexity, xlab='Genome Coverage', ylab='Genome Fraction [%]', clab='Species', alpha=1, size=4, slab='Complexity')
 
-# pdf("ss_assembly_strains_new.pdf", width=6, height=4)
+# pdf("ss_log_new.pdf", width=4.5, height=3)
 
-this <- the_total_tbl %>% filter(assembler=='MEGAHIT', genome_coverage>0.005, (genome_coverage<100 | genome_fraction>50), cutoff=='500b')
-log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=material, alpha=0.3)
-this <- the_total_tbl %>% filter(assembler=='MEGAHIT', genome_coverage>20, (genome_coverage<100 | genome_fraction>50), cutoff=='500b')
-log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=material, alpha=0.3)
+this <- the_total_tbl %>% filter(genome_coverage>0.05, (genome_coverage<100 | genome_fraction>50), cutoff=='500b', complexity=='low')
+log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=three[1], alpha=0.3)
+this <- the_total_tbl %>% filter(genome_coverage>0.05, (genome_coverage<100 | genome_fraction>50), cutoff=='500b', complexity=='medium')
+log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=three[2], alpha=0.3)
+this <- the_total_tbl %>% filter(genome_coverage>0.05, (genome_coverage<100 | genome_fraction>50), cutoff=='500b', complexity=='complex')
+log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=three[3], alpha=0.3)
+
+# dev.off()
+
+# this <- the_total_tbl %>% filter(genome_coverage>0.005, (genome_coverage<100 | genome_fraction>50), cutoff=='500b', complexity=='medium')
+# loghex_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity')
+
+# this <- the_total_tbl %>% filter(assembler=='MEGAHIT', genome_coverage>20, (genome_coverage<100 | genome_fraction>50), cutoff=='500b')
+# log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=material, alpha=0.3)
 
 # Select intersection of samples and SS assemblers
 the_total_tbl <- the_total_tbl %>% filter(assembler %in% c('MEGAHIT', 'SPADES'), cutoff=='500b')
 complex_sample <- unique(the_total_tbl$sample[the_total_tbl$complexity=='complex'])
 medium_sample <- unique(the_total_tbl$sample[the_total_tbl$complexity=='medium'])
 low_sample <- unique(the_total_tbl$sample[the_total_tbl$complexity=='low'])
-inter_sample <- intersect(low_sample,medium_sample)
+
+spades_sample <- unique(the_total_tbl$sample[the_total_tbl$assembler=='SPADES'])
+mega_sample <- unique(the_total_tbl$sample[the_total_tbl$assembler=='MEGAHIT'])
+
+inter_sample <- intersect(low_sample,medium_sample) %>% intersect(spades_sample) %>% intersect(mega_sample)
 inter_tbl <- the_total_tbl %>% filter(sample %in% inter_sample)
 
 # Select species in upper range but below 85% genome fraction as outliers
-outlier_species <- unique(inter_tbl %>% filter(genome_fraction<85, genome_coverage>20, complexity=='low') %>% select(representative))
+outlier_species <- unique(inter_tbl %>% filter(genome_fraction<85, genome_coverage>10, complexity=='low') %>% select(representative))
 robust_species <- unique(inter_tbl %>% filter(complexity=='low', !(representative %in% outlier_species$representative)) %>% select(representative)) 
-robust_tbl <- inter_tbl %>% filter(genome_coverage>20, (genome_coverage<100 | genome_fraction>50), cutoff=='500b', (representative %in% robust_species$representative))
-this <- robust_tbl %>% filter(complexity!='complex')
-log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=material, alpha=0.5)
+robust_tbl <- inter_tbl %>% filter(genome_coverage>10, cutoff=='500b', (representative %in% robust_species$representative))
 
+pdf("strain_loss_robust_new.pdf", width=3, height=3)
+this <- robust_tbl 
+log_plot(this, this$genome_coverage, this$genome_fraction, this$complexity, xlab='Fold Genome Coverage', ylab='Genome Fraction [%]', clab='Complexity', size=1, colorscheme=three, alpha=0.5)
+dev.off()
 
 # Calculate loss of coverage
 rep_coverage <- robust_tbl %>% 
@@ -245,11 +311,35 @@ rep_coverage <- robust_tbl %>%
 loss_tbl <- inner_join(rep_coverage, robust_tbl) %>% 
     mutate(coverage_loss=reference_coverage-genome_fraction) %>%
     inner_join(ani_tbl)
+loss_tbl$ANI[is.na(loss_tbl$ANI)] <- 1
+loss_tbl <- loss_tbl %>% mutate(abundance_bins=cut(genome_coverage, breaks=c(10, 100, +Inf), labels=c('10x - 100x', '> 100x'))) 
 
-this <- loss_tbl %>% filter(ANI > 0.9)
-dot_plot(this, this$ANI, this$coverage_loss, this$assembler, xlab='ANI [%]', ylab='Loss of Genome Fraction [%]', clab='Assembler', size=1, colorscheme=material, alpha=0.5)
-dot_plot_smooth(this, this$ANI, this$coverage_loss, this$assembler, xlab='ANI [%]', ylab='Loss of Genome Fraction [%]', clab='Assembler', size=1, colorscheme=material, alpha=0.5)
 
+# box_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, xlab='Fold Genome Coverage [%]', ylab='Loss of Genome Fraction [%]', flab='Assembler', colorscheme=material)
+
+# Single Reps
+single <- c()
+for (rep in unique(loss_tbl$representative)){
+    if ( length( unique( (loss_tbl%>%filter(representative==rep))$species ) ) == 1 ){
+        print(unique( (loss_tbl%>%filter(representative==rep))$species ) )
+        single <- c(single, rep)
+    }
+}
+loss_tbl <- loss_tbl %>% filter(!(species %in% single))
+
+# pdf("strain_loss_new.pdf", width=3, height=3)
+
+this <- loss_tbl %>% filter(!is.na(coverage_loss), complexity!='low')
+# randombee_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, box=TRUE, xlab='Fold Genome Coverage', ylab='Loss of Genome Fraction [%]', clab='Assembler', colorscheme=material, alpha=0.3) + scale_y_reverse()
+box_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, xlab='Fold Genome Coverage', ylab='Loss of Genome Fraction [%]', flab='Assembler', colorscheme=material) + scale_y_reverse(limits=c(70,0))
+
+this <- loss_tbl %>% filter(!is.na(coverage_loss), complexity!='low', ANI<1)
+# randombee_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, box=TRUE, xlab='Fold Genome Coverage', ylab='Loss of Genome Fraction [%]', clab='Assembler', colorscheme=material, alpha=0.3) + scale_y_reverse()
+box_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, xlab='Fold Genome Coverage', ylab='Loss of Genome Fraction [%]', flab='Assembler', colorscheme=material) + scale_y_reverse(limits=c(70,0))
+
+this <- loss_tbl %>% filter(!is.na(coverage_loss), complexity!='low', ANI==1)
+# randombee_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, box=TRUE, xlab='Fold Genome Coverage', ylab='Loss of Genome Fraction [%]', clab='Assembler', colorscheme=material, alpha=0.3) + scale_y_reverse()
+box_plot(this, this$abundance_bins, this$coverage_loss, this$assembler, xlab='Fold Genome Coverage', ylab='Loss of Genome Fraction [%]', flab='Assembler', colorscheme=material) + scale_y_reverse(limits=c(70,0))
 # dev.off()
 
 
@@ -486,10 +576,6 @@ pheatmap(lsa_15_jsd_matrix, color=colorRampPalette(c('#550527', 'white'))(100))
 # dev.off()
 
 
-
-
-
-
 lsa_55_jsd_long <- gather_matrix(lsa_55_jsd_matrix, key = c('cluster_1', 'cluster_2'), value='dist')
 lsa_15_jsd_long <- gather_matrix(lsa_15_jsd_matrix, key = c('cluster_1', 'cluster_2'), value='dist')
 
@@ -502,3 +588,51 @@ this <- lsa_33_jsd_long %>% group_by(cluster_1, cluster_2) %>% arrange(desc(dist
 this$cluster_1 <- factor(this$cluster_1, levels=cluster_order)
 this$cluster_2 <- factor(this$cluster_2, levels=cluster_order)
 heatmap_plot(this, this$cluster_1, this$cluster_2, this$dist)
+
+
+
+#### POOLED ASSEMBLY ###
+
+method_order <- c('SAMEA_10', 'SAMEA_30', 'lsa_33', 'concoct_66')
+pooled_tbl$method <- factor(pooled_tbl$method, levels=method_order)
+cutoff_order <- c('500b', '10kb')
+pooled_tbl$cutoff <- factor(pooled_tbl$cutoff, levels=cutoff_order)
+pooled_tbl <- pooled_tbl %>% mutate(misassembled_fraction=missassembled_contigs_length/total_length)
+
+material <- c('#2598CC', '#05686C', '#7E2382', '#A10702', '#FFB300')
+
+pdf("pooled_assembly.pdf", width=3.5, height=3)
+
+this <- pooled_tbl
+
+that <- this %>% filter(cutoff=='500b')
+
+median((that %>% filter(method=='lsa_33'))$genome_fraction)
+box_plot(that, that$method, that$genome_fraction, fill=that$method, xlab='Cutoff', ylab='Genome fraction [%]', flab='Method', colorscheme=material, ylim=c(50, 100))
+
+randombee_plot(that, that$method, that$genome_fraction, color=that$method, xlab='Cutoff', ylab='Genome fraction [%]', clab='Method', colorscheme=material)
+
+that <- this %>% filter(cutoff=='10kb')
+box_plot(that, that$method, that$genome_fraction, fill=that$method, xlab='Cutoff', ylab='Genome fraction [%]', flab='Method', colorscheme=material)
+
+this <- pooled_tbl %>% filter(method=='lsa_33')
+this$LGA50
+
+box_plot(this, this$cutoff, this$misassembled_fraction, fill=this$method, xlab='Cutoff', ylab='misassembled_fraction', flab='Method', colorscheme=material, ylim=c(0,0.4))
+
+box_plot(this, this$method, this$NGA50, fill=this$method, xlab='Cutoff', ylab='NGA50', flab='Method', colorscheme=material)
+box_plot(this, this$method, this$LGA50, fill=this$method, xlab='Cutoff', ylab='LGA50', flab='Method', colorscheme=material, ylim=c(0, 800))
+
+box_plot(this, this$cutoff, this$largest_contig, fill=this$method, xlab='Cutoff', ylab='largest_contig', flab='Method', colorscheme=material)
+box_plot(this, this$cutoff, this$total_length, fill=this$method, xlab='Cutoff', ylab='total_length', flab='Method', colorscheme=material, ylim=c(0, 5e+7))
+
+dev.off()
+
+box_plot(this, this$method, this$total_length, fill=this$method, xlab='Cutoff', ylab='total_length', flab='Method', colorscheme=material)
+box_plot(this, this$method, this$total_length_1000, fill=this$method, xlab='Cutoff', ylab='total_length_1000', flab='Method', colorscheme=material)
+box_plot(this, this$method, this$total_length_10000, fill=this$method, xlab='Cutoff', ylab='total_length_10000', flab='Method', colorscheme=material)
+box_plot(this, this$method, this$total_length_50000, fill=this$method, xlab='Cutoff', ylab='total_length_50000', flab='Method', colorscheme=material)
+
+
+
+

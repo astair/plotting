@@ -14,9 +14,9 @@ out.table <- df.list[[1]]
 for (table in df.list[2:length(df.list)]){
   out.table <- inner_join(out.table, table, by = c('species', 'sample'))
 }
-variables <- sort(c("#Ns_per_100bp", "#contigs", "#genes", "#indels_per_100kb", "misassemblies", "mismatches_per_100kb", "#operons", "#predicted_genes", "av_contig_read_support", "duplication_ratio", "genome_fraction", "LGA50", "largest_alignment", "largest_contig", "missassembled_contigs_length", "NGA50", "total_aligned_legnth", "total_length_10000bp", "total_length_1000bp", "total_length_50000bp", "total_length"))
+# variables <- sort(c("#Ns_per_100bp", "#contigs", "#genes", "#indels_per_100kb", "misassemblies", "mismatches_per_100kb", "#operons", "#predicted_genes", "av_contig_read_support", "duplication_ratio", "genome_fraction", "LGA50", "largest_alignment", "largest_contig", "missassembled_contigs_length", "NGA50", "total_aligned_legnth", "total_length_10000bp", "total_length_1000bp", "total_length_50000bp", "total_length"))
+variables <- c("genome_fraction", "largest_alignment", "largest_contig", "LGA50", "missassembled_contigs_length", "misassemblies", "NGA50", "total_aligned_legnth", 'total_length_1000', 'total_length_10000', 'total_length_50000', "total_length")
 names.vec <- c("species", "sample", variables)
 colnames(out.table) <- names.vec[1:length(colnames(out.table))]
 print(out.table)
 write_tsv(out.table, out.path)
-
