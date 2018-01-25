@@ -31,7 +31,10 @@ info$status <- factor(info$status, levels=status_order)
 
 this <- info %>% 
     filter(complexity=='low') 
-spec_order <- this %>% group_by(representative) %>% summarise(median_abundance=median(rel_abundance)) %>% arrange(desc(median_abundance))
+spec_order <- this %>% 
+    group_by(representative) %>% 
+    summarise(median_abundance=median(rel_abundance)) %>% 
+    arrange(desc(median_abundance))
 
 colors <- c('#Ae0031', '#2d62a3', '#ffbb00', '#198749', '#6c3483', '#Ff7708', '#15889C')
 
@@ -39,11 +42,13 @@ this$representative <- factor(this$representative, levels=spec_order$representat
 this$species <- factor(this$species, levels=unique(this$species))
 this$phylum <- factor(this$phylum, levels=unique(this$phylum))
 
-this <- this %>% filter(representative %in% c('420247.PRJNA18653', '511680.PRJNA28999', '592028.PRJNA33143', '702459.PRJNA42863'))
-
 logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=colors, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
 
-
+this <- info %>% 
+    filter(complexity=='medium') %>%
+    group_by(representative) %>%
+    mutate(mean_abundance=median(rel_abundance)) %>%
+    arrange(desc(mean_abundance))
 
 colors <- c('#Ae0031', '#2d62a3', '#198749', '#ffbb00', '#Ff7708', '#15889C')
 
@@ -52,13 +57,12 @@ this$species <- factor(this$species, levels=unique(this$species))
 this$phylum <- factor(this$phylum, levels=unique(this$phylum))
 logbox_plot(this, this$representative, this$rel_abundance, this$phylum, this$status, out_size=0.5, ylim=c(NA, 1), colorscheme=colors, xlab='Species', ylab='Relative Abundance', flab='Phylum', blank_x=TRUE)
 
+
 this <- info %>% 
     filter(complexity=='complex') %>% 
     group_by(representative) %>%
     mutate(mean_abundance=median(rel_abundance)) %>%
     arrange(desc(mean_abundance))
-
-unique(this$species)
 
 colors <- c('#2d62a3', '#198749', '#Ae0031', '#ffbb00', '#Ff7708', '#6c3483', '#15889C')
 

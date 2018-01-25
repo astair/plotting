@@ -5,13 +5,13 @@ setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
 nnames <- c('species', 'seq_num', 'assembly_len', 'mean_len', 'longest_contig', 'shortest_contig', 'GC_cont', 'N_cont', 'N50', 'L50')
 
 genome_stats_complex <- read_tsv(
-    'nile/data/specs/complex_genomes_stats.txt', col_names = F) %>% 
+    'nile/data/sim/complex_genomes_stats.txt', col_names = F) %>% 
     rename_all( ~nnames) 
 genome_stats_low <- read_tsv(
-    'nile/data/specs/low_genomes_stats.txt', col_names = F) %>%
+    'nile/data/sim/low_genomes_stats.txt', col_names = F) %>%
     rename_all( ~nnames) 
 genome_stats_med <- read_tsv(
-    'nile/data/specs/med_genomes_stats.txt', col_names = F) %>%
+    'nile/data/sim/med_genomes_stats.txt', col_names = F) %>%
     rename_all( ~nnames) 
 
 
@@ -145,5 +145,5 @@ binners_count_info <- inner_join(binners_counts, info_all) %>% group_by(cluster,
 
 
 ### FIDDELING WITH STRAINS ### 
-strains_tbl <- read_tsv('nile/data/specs/strains_mapping_2.txt')
+strains_tbl <- read_tsv('nile/data/sim/strains_mapping_2.txt')
 ani_tbl <- read_tsv('results/perc_ids.tab', skip=2) %>% gather(key=representative, value=ANI, -X1) %>% rename('species'=X1) %>% print() 

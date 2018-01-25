@@ -99,7 +99,7 @@ bar_plot_dodge <- function(data, x, y, fill=NA, xlab='x', ylab='y', flab='fill',
   return(p)
 }
 
-bar_plot_count <- function(data, x, y, fill, xlab='x', ylab='y', title='', colorscheme=NULL, flegend=TRUE, alegend=FALSE, alpha=NA){
+bar_plot_ident <- function(data, x, y, fill, xlab='x', ylab='y', title='', colorscheme=NULL, flegend=TRUE, alegend=FALSE, alpha=NA){
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_bar(stat = 'identity') + 
     ggtitle(title) +
@@ -108,6 +108,30 @@ bar_plot_count <- function(data, x, y, fill, xlab='x', ylab='y', title='', color
     scale_alpha_discrete(range = c(1, 0.3)) + 
     labs(x=xlab, y=ylab) + 
     theme(legend.position="none")
+    if (is.null(colorscheme)){
+      p <- p + scale_fill_viridis(discrete=T, option='viridis', na.value='grey')
+    } else {
+      p <- p + scale_fill_manual(values=colorscheme, na.value='grey')
+    }
+    if (!(flegend)){
+      p <- p + guides(fill=FALSE)
+    }
+    if (!(alegend)){
+      p <- p + guides(alpha=FALSE)
+    }
+  return(p)
+}
+
+bar_plot_count <- function(data, x, fill=NA, xlab=NA, ylab='count', title='', colorscheme=NULL, flegend=TRUE, alegend=FALSE, alpha=NA){
+  p <- ggplot(data=data, aes(x=x, fill=fill)) + 
+    geom_bar() + 
+    ggtitle(title) +
+    theme_bw() + 
+    scale_alpha_discrete(range = c(1, 0.3)) + 
+    labs(x=xlab, y=ylab) + 
+    theme(
+      axis.text.x=element_text(angle = 90, hjust = 1)
+      )
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option='viridis', na.value='grey')
     } else {

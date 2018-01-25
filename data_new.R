@@ -6,13 +6,13 @@ setwd('~/Documents/Msc-Biotechnologie/masterarbeit-zeller/')
 nnames <- c('species', 'seq_num', 'assembly_len', 'mean_len', 'longest_contig', 'shortest_contig', 'GC_cont', 'N_cont', 'N50', 'L50')
 
 genome_stats_complex <- read_tsv(
-    'nile/data/specs/complex_genomes_stats.txt', col_names = F) %>% 
+    'nile/data/sim/complex_genomes_stats.txt', col_names = F) %>% 
     rename_all( ~nnames) 
 genome_stats_low <- read_tsv(
-    'nile/data/specs/low_genomes_stats.txt', col_names = F) %>%
+    'nile/data/sim/low_genomes_stats.txt', col_names = F) %>%
     rename_all( ~nnames) 
 genome_stats_med <- read_tsv(
-    'nile/data/specs/med_genomes_stats.txt', col_names = F) %>%
+    'nile/data/sim/med_genomes_stats.txt', col_names = F) %>%
     rename_all( ~nnames) 
 
 
@@ -306,13 +306,13 @@ lsa_15_jsd_matrix <- dist_matrix_jsd(binners_count_info, 'LSA_15')
 ### FIDDELING WITH STRAINS ### 
 ani_tbl <- read_tsv('results/perc_ids.tab', skip=2) %>% gather(key=representative, value=ANI, -X1) %>% rename('species'=X1) %>% print() 
 
-reps <- read_tsv('nile/data/specs/stuff/freeze_representatives_proper.txt', col_names = F)
+reps <- read_tsv('nile/data/specs/representative_genomes_specI.txt', col_names = F)
 
-strains_tbl_low <- read_tsv('nile/data/specs/low.txt', col_names = F) %>% 
+strains_tbl_low <- read_tsv('nile/data/sim/low.txt', col_names = F) %>% 
     mutate(status='representative', representative=X1, complexity='low') %>%
     rename('species'=X1)
 
-med <- read_tsv('nile/data/specs/med.txt', col_names = F) %>% 
+med <- read_tsv('nile/data/sim/med.txt', col_names = F) %>% 
     mutate(status=ifelse(X1 %in% low$species, 'representative', 'strain'))
 
 n <- 0
@@ -335,7 +335,7 @@ for (spec in med$X1){
 }
 strains_tbl_medium <- strains_tbl_medium %>% mutate(complexity='medium')
 
-complex <- read_tsv('nile/data/specs/complex.txt', col_names = F) %>% print()
+complex <- read_tsv('nile/data/sim/complex.txt', col_names = F) %>% print()
 
 n <- 0
 strains_tbl_complex <- c()
@@ -360,8 +360,8 @@ strains_tbl_complex <- strains_tbl_complex %>% mutate(complexity='complex')
 strains_tbl <- bind_rows(strains_tbl_complex, strains_tbl_medium, strains_tbl_low)
 
 
-taxonomy <- read_tsv('nile/data/specs/stuff/specI.taxonomy')
-mapping <- read_tsv('nile/data/specs/top_70_representatives.txt', col_names=F)
+taxonomy <- read_tsv('nile/data/specs/specI_taxonomy.tsv')
+mapping <- read_tsv('nile/data/sim/top_70_representatives.txt', col_names=F)
 mapping$X1 <- str_replace(mapping$X1, '.*\\{(.*)\\}', '\\1')
 
 taxonomy_tbl <- inner_join(taxonomy, mapping, by=c('specI_cluster'='X1')) %>% select(X3, phylum, family)
