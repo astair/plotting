@@ -20,7 +20,20 @@ flat <- c('#471b9a' , '#ff6f00', '#1565c0', '#43a047', '#ffb300', '#c62828')
 
 three <- c('#16A085', '#2980B9', '#8E44AD')
 
-many <- c('#Ae0031', '#ffbb00', '#198749', '#2d62a3', '#573794','#Ff7708', '#15889C', '#ED49B1', '#8E13A2', '#ead9d5', '#666686', '#CD6155', '#F7DC6F', '#7DCEA0', '#85C1E9', '#EB984E', '#03cd4A', '#CDDC39', '#e0594b', '#c76cde', '#24B177', '#8D6E63', '#486ff7', '#6300b5', '#88e200', '#012824', '#0d3290', '#ead9d5', '#a347fb', '#54fc7a', '#eb1388', '#b0978d', '#fe52cf', '#83f1f6', '#f1f847', '#2b1dfc', '#6c6f15', '#6ca05c', '#7788cd', '#f502f3', '#0dc290', '#fa0e03', '#3caa0a', '#befc8d', '#08f8eb', '#b1cd3f', '#d6a5fa', '#ce606c', '#ab1eba', '#6ecc9f', '#054ddc', '#486ff7', '#854f49', '#f22B21', '#3a0e43', '#225805', '#37d160', '#e4b974', '#a8bade', '#47edd1', '#f47a92', '#c76cde', '#9106eb', '#81aa20', '#d7fdfd', '#5deb2e', '#f82745', '#6435e0', '#027ffe', '#8e3101', '#16f648', '#1c15bc', '#8be46e', '#8d6fa0', '#e68fc6', '#058ca9', '#9e018a', '#bdfd0b', '#b22760', '#2bf49f', '#cb9348', '#9d8303', '#c251a1', '#46adaf', '#a3e3af', '#22bb34', '#6ea3fa', '#260374', '#1c3854', '#405d37', '#c21df3', '#fcea92', '#537f88', '#fd4c18', '#f2d71e', '#fd4c7a')
+many <- c('#Ae0031', '#ffbb00', '#198749', '#2d62a3', '#573794','#Ff7708', '#15889C', 
+    '#ED49B1', '#8E13A2', '#ead9d5', '#666686', '#CD6155', '#F7DC6F', '#7DCEA0', 
+    '#85C1E9', '#EB984E', '#03cd4A', '#CDDC39', '#e0594b', '#c76cde', '#24B177', 
+    '#8D6E63', '#486ff7', '#6300b5', '#88e200', '#012824', '#0d3290', '#ead9d5', 
+    '#a347fb', '#54fc7a', '#eb1388', '#b0978d', '#fe52cf', '#83f1f6', '#f1f847', 
+    '#2b1dfc', '#6c6f15', '#6ca05c', '#7788cd', '#f502f3', '#0dc290', '#fa0e03', 
+    '#3caa0a', '#befc8d', '#08f8eb', '#b1cd3f', '#d6a5fa', '#ce606c', '#ab1eba', 
+    '#6ecc9f', '#054ddc', '#486ff7', '#854f49', '#f22B21', '#3a0e43', '#225805', 
+    '#37d160', '#e4b974', '#a8bade', '#47edd1', '#f47a92', '#c76cde', '#9106eb', 
+    '#81aa20', '#d7fdfd', '#5deb2e', '#f82745', '#6435e0', '#027ffe', '#8e3101', 
+    '#16f648', '#1c15bc', '#8be46e', '#8d6fa0', '#e68fc6', '#058ca9', '#9e018a', 
+    '#bdfd0b', '#b22760', '#2bf49f', '#cb9348', '#9d8303', '#c251a1', '#46adaf', 
+    '#a3e3af', '#22bb34', '#6ea3fa', '#260374', '#1c3854', '#405d37', '#c21df3', 
+    '#fcea92', '#537f88', '#fd4c18', '#f2d71e', '#fd4c7a')
 
 insert_minor <- function(major_labs, n_minor) {
   labs <- c( sapply( major_labs, function(x) c(x, rep("", n_minor))))
@@ -85,10 +98,12 @@ randombee_plot <- function(data, x, y, color, alpha=1, box=FALSE,
       p <- p + scale_color_manual(values=colorscheme)
     }
     if (box){
-      p <- p + stat_boxplot(geom='boxplot', alpha=0.5, outlier.shape=NA, position='dodge', width=0.8)
+      p <- p + stat_boxplot(geom='boxplot', alpha=0.5, outlier.shape=NA, 
+          position='dodge', width=0.8)
     }
     if (median){
-      p <- p + stat_summary(fun.y='median', fun.ymin='median', fun.ymax='median', geom='crossbar', position='dodge', width=0.8)
+      p <- p + stat_summary(fun.y='median', fun.ymin='median', fun.ymax='median', 
+          geom='crossbar', position='dodge', width=0.8)
     }
   return(p)
 }
@@ -367,7 +382,7 @@ dot_plot_smooth <- function(data, x, y, color=NA, xlab='x', ylab='y',
   return(p)  
 }
 
-log_plot <- function(data, x, y, color='#424949', shape='x', xlab='x', 
+logdot_plot <- function(data, x, y, color='#424949', shape='x', xlab='x', 
                      ylab='y', clab='color', slab='shape', alpha=0.8, 
                      size=2, title='', colorscheme=NULL)
   {
@@ -395,8 +410,10 @@ loglog_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab,
     ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
-    scale_y_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), limits=c(1e-05, 1)) +
-    scale_x_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), limits=c(1e-05, 1)) +
+    scale_y_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), 
+        limits=c(1e-05, 1)) +
+    scale_x_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), 
+        limits=c(1e-05, 1)) +
     labs(x=xlab, y=ylab, color=clab)
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option='viridis')
