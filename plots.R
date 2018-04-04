@@ -50,7 +50,7 @@ color_gradient_scrambled <- function(start='white', end='#550527', n=100){
 
 bar_plot <- function(data, x, y, fill=NA, xlab='x', ylab='y', flab='fill', 
                      title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
     ggtitle(title) + 
     geom_bar(stat = 'summary', fun.y = "mean") + 
@@ -67,7 +67,7 @@ bar_plot <- function(data, x, y, fill=NA, xlab='x', ylab='y', flab='fill',
 
 beeswarm_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, 
                           title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, color=color, alpha=alpha)) + 
     ggtitle(title) + 
     geom_beeswarm() + 
@@ -85,7 +85,7 @@ beeswarm_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab,
 randombee_plot <- function(data, x, y, color, alpha=1, box=FALSE, 
                            median=FALSE, xlab, ylab, clab, title='', 
                            colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     ggtitle(title) + 
     geom_quasirandom(dodge.width=0.8, alpha=alpha) + 
@@ -108,9 +108,9 @@ randombee_plot <- function(data, x, y, color, alpha=1, box=FALSE,
   return(p)
 }
 
-bar_plot_dodge <- function(data, x, y, fill=NA, xlab='x', ylab='y', 
+dodged_bar_plot <- function(data, x, y, fill=NA, xlab='x', ylab='y', 
                            flab='fill', title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
     geom_bar(stat = 'summary', fun.y = "mean", position = 'dodge') + 
     ggtitle(title) +
@@ -125,10 +125,10 @@ bar_plot_dodge <- function(data, x, y, fill=NA, xlab='x', ylab='y',
   return(p)
 }
 
-bar_plot_ident <- function(data, x, y, fill, xlab='x', ylab='y', title='', 
+ident_bar_plot <- function(data, x, y, fill, xlab='x', ylab='y', title='', 
                            colorscheme=NULL, flegend=TRUE, alegend=FALSE, 
                            alpha=NA)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_bar(stat = 'identity') + 
     ggtitle(title) +
@@ -151,10 +151,10 @@ bar_plot_ident <- function(data, x, y, fill, xlab='x', ylab='y', title='',
   return(p)
 }
 
-bar_plot_count <- function(data, x, fill=NA, xlab=NA, ylab='count', 
+count_bar_plot <- function(data, x, fill=NA, xlab=NA, ylab='count', 
                            title='', colorscheme=NULL, flegend=TRUE, 
                            alegend=FALSE, alpha=NA)
-  {
+{
   p <- ggplot(data=data, aes(x=x, fill=fill)) + 
     geom_bar() + 
     ggtitle(title) +
@@ -181,7 +181,7 @@ bar_plot_count <- function(data, x, fill=NA, xlab=NA, ylab='count',
 violin_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y', 
                         flab='fill', legend=TRUE, ylim=c(0, NA), title='', 
                         colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill), alpha=alpha) + 
     geom_violin(draw_quantiles=c(0.25, 0.5, 0.75)) + 
     # stat_summary(fun.y="mean", geom="crossbar", position='dodge', size=1) +
@@ -205,7 +205,7 @@ violin_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y',
 box_plot <- function(data, x, y, fill, alpha=NA, xlab='x', ylab='y', 
                      flab='fill', flegend=TRUE, alegend=FALSE, out_size=1.5, 
                      ylim=c(0, NA), title='', colorscheme=NULL, notch=FALSE)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_boxplot(outlier.size=out_size, notch=notch) + 
     ggtitle(title) +
@@ -228,11 +228,11 @@ box_plot <- function(data, x, y, fill, alpha=NA, xlab='x', ylab='y',
   return(p)
 }
 
-logbox_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y', 
+log_box_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y', 
                         flab='fill', flegend=TRUE, alegend=FALSE, 
                         out_size=1.5, ylim=c(NA, 1), blank_x=FALSE, 
                         title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_boxplot(outlier.size=out_size) + 
     ggtitle(title) +
@@ -260,10 +260,10 @@ logbox_plot <- function(data, x, y, fill, alpha=1, xlab='x', ylab='y',
   return(p)
 }
 
-loghex_plot <- function(data, x, y, color='#424949', xlab='x', 
+log_hex_plot <- function(data, x, y, color='#424949', xlab='x', 
                         ylab='y', clab='color', slab='shape', 
                         title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y), shape=shape) + 
     geom_hex() + 
     ggtitle(title) +
@@ -282,7 +282,7 @@ loghex_plot <- function(data, x, y, color='#424949', xlab='x',
 qq_plot <- function(data, sample, shape='a', col=sample, xlab='x', 
                     ylab='y',slab='shape', clab='color', title='', 
                     colorscheme=NULL)
-  {
+{
   p <-ggplot(data=data, aes(col=col, shape=shape)) + 
     ggtitle(title) +
     geom_qq(aes(sample = genome_fraction), distribution = stats::qnorm) + 
@@ -297,11 +297,11 @@ qq_plot <- function(data, sample, shape='a', col=sample, xlab='x',
   return(p)
 }
 
-qq_plot_ss <- function(x=c(), y=c(), size=1, variable, split, ylab='y', 
+qq_ss_plot <- function(x=c(), y=c(), size=1, variable, split, ylab='y', 
                        xlab='x', clab='c', legend_title='Legend', 
                        legend_labels=c(), dist, title='', 
                        colorscheme=NULL)
-  {
+{
   x_sep <- x %>% 
     select_(variable, split) %>% 
     group_by_(split) %>% 
@@ -330,7 +330,7 @@ qq_plot_ss <- function(x=c(), y=c(), size=1, variable, split, ylab='y',
 ecdf_plot <- function(data, x, line='1', col='#424949', xlab='x', 
                       ylab='y',llab='line', clab='color', title='', 
                       colorscheme=NULL)
-  {
+{
   p <-ggplot(data=data, aes(x=x, col=col), linetype=line) + 
     ggtitle(title) +
     stat_ecdf(size=1) + 
@@ -348,7 +348,7 @@ ecdf_plot <- function(data, x, line='1', col='#424949', xlab='x',
 dot_plot <- function(data, x, y, color='teal', xlab='x', ylab='y', 
                      clab='color', alpha=1, size=2, title='', 
                      colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=size, alpha=alpha) + 
     ggtitle(title) +
@@ -363,10 +363,10 @@ dot_plot <- function(data, x, y, color='teal', xlab='x', ylab='y',
   return(p)  
 }
 
-dot_plot_smooth <- function(data, x, y, color=NA, xlab='x', ylab='y', 
+smooth_dot_plot <- function(data, x, y, color=NA, xlab='x', ylab='y', 
                             clab='color', alpha=1, se=FALSE, span=0.8, 
                             size=2, title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=size, alpha=alpha) + 
     geom_smooth(span=span, se=se) +
@@ -382,10 +382,10 @@ dot_plot_smooth <- function(data, x, y, color=NA, xlab='x', ylab='y',
   return(p)  
 }
 
-logdot_plot <- function(data, x, y, color='#424949', shape='x', xlab='x', 
+log_dot_plot <- function(data, x, y, color='#424949', shape='x', xlab='x', 
                      ylab='y', clab='color', slab='shape', alpha=0.8, 
                      size=2, title='', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, color=color), shape=shape) + 
     geom_point(size=size, alpha=alpha) + 
     ggtitle(title) +
@@ -402,9 +402,9 @@ logdot_plot <- function(data, x, y, color='#424949', shape='x', xlab='x',
 }
 
 
-loglog_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, 
+loglog_dot_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, 
                         colorscheme=NULL) 
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=1, alpha=alpha) + 
     ggtitle(title) +
@@ -420,7 +420,7 @@ loglog_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab,
     } else {
       p <- p + scale_color_manual(values=colorscheme)
     }
-  return(p)  
+  return(p) 
 }
 
 gather_matrix <- function(data, key, value){
@@ -429,7 +429,7 @@ gather_matrix <- function(data, key, value){
 
 heatmap_plot <- function(data, x, y, fill=NA, xlab='x', ylab='y', 
                          flab='fill', colorscheme=NULL)
-  {
+{
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) +
     geom_tile(color='white') + 
     theme_bw()
