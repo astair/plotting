@@ -17,9 +17,7 @@ bluelime <- c("#012824", "#15889C", "#7BCFC0", "#88E200", "#028F03")
 bricksky <- c("#0B3954", "#28AAE1", "#FDC120", "#D94551", "#55545C")
 colorful <- c("#9E0031", "#FFBB00", "#198749", "#2D62A3", "#8E1382", "#5A0002")
 flat <- c("#471b9a" , "#ff6f00", "#1565c0", "#43a047", "#ffb300", "#c62828")
-
 three <- c("#16A085", "#2980B9", "#8E44AD")
-
 many <- c("#Ae0031", "#ffbb00", "#198749", "#2d62a3", "#573794","#Ff7708", "#15889C", 
     "#ED49B1", "#8E13A2", "#ead9d5", "#666686", "#CD6155", "#F7DC6F", "#7DCEA0", 
     "#85C1E9", "#EB984E", "#03cd4A", "#CDDC39", "#e0594b", "#c76cde", "#24B177", 
@@ -48,15 +46,12 @@ color_gradient_scrambled <- function(start="white", end="#550527", n=100){
   return(sample(colorRampPalette(c(start, end))(n)))
 }
 
-bar_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y", flab="fill", 
-                     title="", colorscheme=NULL)
+bar_plot <- function(data, x, y, fill=NA, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
-    ggtitle(title) + 
     geom_bar(stat = "summary", fun.y = "mean") + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() + 
-    labs(x=xlab, y=ylab, fill=flab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis")
     } else {
@@ -65,15 +60,13 @@ bar_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y", flab="fill",
   return(p)
 }
 
-beeswarm_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, 
-                          title="", colorscheme=NULL)
+beeswarm_plot <- function(data, x, y, color=NA, alpha=NA,
+    colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, color=color, alpha=alpha)) + 
-    ggtitle(title) + 
     geom_beeswarm() + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() + 
-    labs(x=xlab, y=ylab, color=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis")
     } else {
@@ -82,16 +75,13 @@ beeswarm_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab,
   return(p)
 }
 
-randombee_plot <- function(data, x, y, color, alpha=1, box=FALSE, 
-                           median=FALSE, xlab, ylab, clab, title="", 
-                           colorscheme=NULL)
+randombee_plot <- function(data, x, y, color=NA, alpha=NA, box=FALSE, median=FALSE, 
+    colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
-    ggtitle(title) + 
     geom_quasirandom(dodge.width=0.8, alpha=alpha) + 
     theme(axis.text.x = element_text(angle=90, hjust=1)) +
-    theme_bw() + 
-    labs(x=xlab, y=ylab, color=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
     } else {
@@ -108,15 +98,12 @@ randombee_plot <- function(data, x, y, color, alpha=1, box=FALSE,
   return(p)
 }
 
-dodged_bar_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y", 
-                           flab="fill", title="", colorscheme=NULL)
+dodged_bar_plot <- function(data, x, y, fill=NA, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
     geom_bar(stat = "summary", fun.y = "mean", position = "dodge") + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() + 
-    labs(x=xlab, y=ylab, fill=flab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis")
     } else {
@@ -125,17 +112,14 @@ dodged_bar_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y",
   return(p)
 }
 
-ident_bar_plot <- function(data, x, y, fill, xlab="x", ylab="y", title="", 
-                           colorscheme=NULL, flegend=TRUE, alegend=FALSE, 
-                           alpha=NA)
+ident_bar_plot <- function(data, x, y, fill=NA, colorscheme=NULL, flegend=TRUE, 
+    alegend=FALSE, alpha=NA)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_bar(stat = "identity") + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
     scale_alpha_discrete(range = c(1, 0.3)) + 
-    labs(x=xlab, y=ylab) + 
     theme(legend.position="none")
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis", na.value="grey")
@@ -151,16 +135,13 @@ ident_bar_plot <- function(data, x, y, fill, xlab="x", ylab="y", title="",
   return(p)
 }
 
-count_bar_plot <- function(data, x, fill=NA, xlab=NA, ylab="count", 
-                           title="", colorscheme=NULL, flegend=TRUE, 
-                           alegend=FALSE, alpha=NA)
+count_bar_plot <- function(data, x, fill=NA, colorscheme=NULL, flegend=TRUE, 
+    alegend=FALSE, alpha=NA)
 {
   p <- ggplot(data=data, aes(x=x, fill=fill)) + 
     geom_bar() + 
-    ggtitle(title) +
     theme_bw() + 
-    scale_alpha_discrete(range = c(1, 0.3)) + 
-    labs(x=xlab, y=ylab) + 
+    scale_alpha_discrete(range = c(1, 0.3)) +
     theme(
       axis.text.x=element_text(angle = 90, hjust = 1)
       )
@@ -178,19 +159,16 @@ count_bar_plot <- function(data, x, fill=NA, xlab=NA, ylab="count",
   return(p)
 }
 
-violin_plot <- function(data, x, y, fill, alpha=1, xlab="x", ylab="y", 
-                        flab="fill", legend=TRUE, ylim=c(0, NA), title="", 
-                        colorscheme=NULL)
+violin_plot <- function(data, x, y, fill=NA, alpha=NA, legend=TRUE, ylim=c(0, NA), 
+    colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill), alpha=alpha) + 
     geom_violin(draw_quantiles=c(0.25, 0.5, 0.75)) + 
     # stat_summary(fun.y="mean", geom="crossbar", position="dodge", size=1) +
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() +
     scale_alpha_discrete(range = c(1, 0.6)) +  
-    scale_y_continuous(limits = ylim) +  
-    labs(x=xlab, y=ylab, fill=flab)
+    scale_y_continuous(limits = ylim)
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis")
     } else {
@@ -202,18 +180,15 @@ violin_plot <- function(data, x, y, fill, alpha=1, xlab="x", ylab="y",
   return(p)
 }
 
-box_plot <- function(data, x, y, fill, alpha=NA, xlab="x", ylab="y", 
-                     flab="fill", flegend=TRUE, alegend=FALSE, out_size=1.5, 
-                     ylim=c(0, NA), title="", colorscheme=NULL, notch=FALSE)
+box_plot <- function(data, x, y, fill=NA, alpha=NA, flegend=TRUE, alegend=FALSE, 
+    out_size=1.5, ylim=c(0, NA), colorscheme=NULL, notch=FALSE)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_boxplot(outlier.size=out_size, notch=notch) + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() +
     scale_alpha_discrete(range = c(1, 0.6)) +  
-    scale_y_continuous(limits = ylim) +  
-    labs(x=xlab, y=ylab, fill=flab)
+    scale_y_continuous(limits = ylim)
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis")
     } else {
@@ -228,19 +203,15 @@ box_plot <- function(data, x, y, fill, alpha=NA, xlab="x", ylab="y",
   return(p)
 }
 
-log_box_plot <- function(data, x, y, fill, alpha=1, xlab="x", ylab="y", 
-                        flab="fill", flegend=TRUE, alegend=FALSE, 
-                        out_size=1.5, ylim=c(NA, 1), blank_x=FALSE, 
-                        title="", colorscheme=NULL)
+log_box_plot <- function(data, x, y, fill=NA, alpha=1, flegend=TRUE, alegend=FALSE, 
+    out_size=1.5, ylim=c(NA, 1), blank_x=FALSE, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill, alpha=alpha)) + 
     geom_boxplot(outlier.size=out_size) + 
-    ggtitle(title) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     scale_alpha_discrete(range = c(1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3)) +  
-    scale_y_log10(limits = ylim) +
-    labs(x=xlab, y=ylab, fill=flab)
+    scale_y_log10(limits = ylim)
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(discrete=T, option="viridis")
     } else {
@@ -260,17 +231,13 @@ log_box_plot <- function(data, x, y, fill, alpha=1, xlab="x", ylab="y",
   return(p)
 }
 
-log_hex_plot <- function(data, x, y, color="#424949", xlab="x", 
-                        ylab="y", clab="color", slab="shape", 
-                        title="", colorscheme=NULL)
+log_hex_plot <- function(data, x, y, color=NA, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y), shape=shape) + 
     geom_hex() + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     scale_x_log10() +
-    theme_bw() +  
-    labs(x=xlab, y=ylab, color=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_fill_viridis(option="viridis")
     } else {
@@ -279,16 +246,12 @@ log_hex_plot <- function(data, x, y, color="#424949", xlab="x",
   return(p)  
 }
 
-qq_plot <- function(data, sample, shape="a", col=sample, xlab="x", 
-                    ylab="y",slab="shape", clab="color", title="", 
-                    colorscheme=NULL)
+qq_plot <- function(data, sample, shape="a", color=NA, colorscheme=NULL)
 {
-  p <-ggplot(data=data, aes(col=col, shape=shape)) + 
-    ggtitle(title) +
+  p <-ggplot(data=data, aes(color=color, shape=shape)) + 
     geom_qq(aes(sample = genome_fraction), distribution = stats::qnorm) + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() + 
-    labs(x=xlab, y=ylab, col=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
     } else {
@@ -297,10 +260,8 @@ qq_plot <- function(data, sample, shape="a", col=sample, xlab="x",
   return(p)
 }
 
-qq_ss_plot <- function(x=c(), y=c(), size=1, variable, split, ylab="y", 
-                       xlab="x", clab="c", legend_title="Legend", 
-                       legend_labels=c(), dist, title="", 
-                       colorscheme=NULL)
+qq_ss_plot <- function(x=c(), y=c(), size=1, variable, split, legend_title="Legend", 
+    legend_labels=c(), dist, colorscheme=NULL)
 {
   x_sep <- x %>% 
     select_(variable, split) %>% 
@@ -315,10 +276,8 @@ qq_ss_plot <- function(x=c(), y=c(), size=1, variable, split, ylab="y",
  
   p <- ggplot(xy_tbl) +
     geom_point(aes(x = x, y = y, color = c), size=size) + 
-    ggtitle(title) +
     theme_bw() +
-    geom_abline(slope=1, linetype=2) +
-    labs(x = xlab, y = ylab, color = clab)
+    geom_abline(slope=1, linetype=2)
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
     } else {
@@ -327,15 +286,12 @@ qq_ss_plot <- function(x=c(), y=c(), size=1, variable, split, ylab="y",
   return(p)
 }
 
-ecdf_plot <- function(data, x, line="1", col="#424949", xlab="x", 
-                      ylab="y",llab="line", clab="color", title="", 
-                      colorscheme=NULL)
+ecdf_plot <- function(data, x, line="1", color=NA,
+    colorscheme=NULL)
 {
-  p <-ggplot(data=data, aes(x=x, col=col), linetype=line) + 
-    ggtitle(title) +
+  p <-ggplot(data=data, aes(x=x, color=color), linetype=line) + 
     stat_ecdf(size=1) + 
     theme_bw() + 
-    labs(x=ylab, y=xlab, col=clab, line=llab) + 
     coord_flip()
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
@@ -345,16 +301,12 @@ ecdf_plot <- function(data, x, line="1", col="#424949", xlab="x",
   return(p)
 }
 
-dot_plot <- function(data, x, y, color="teal", xlab="x", ylab="y", 
-                     clab="color", alpha=1, size=2, title="", 
-                     colorscheme=NULL)
+dot_plot <- function(data, x, y, color=NA, alpha=1, size=2, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=size, alpha=alpha) + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
-    theme_bw() +  
-    labs(x=xlab, y=ylab, color=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis", na.value="grey")
     } else {
@@ -363,17 +315,14 @@ dot_plot <- function(data, x, y, color="teal", xlab="x", ylab="y",
   return(p)  
 }
 
-smooth_dot_plot <- function(data, x, y, color=NA, xlab="x", ylab="y", 
-                            clab="color", alpha=1, se=FALSE, span=0.8, 
-                            size=2, title="", colorscheme=NULL)
+smooth_dot_plot <- function(data, x, y, color=NA, alpha=1, se=FALSE, span=0.8, size=2, 
+    colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=size, alpha=alpha) + 
     geom_smooth(span=span, se=se) +
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
-    theme_bw() +  
-    labs(x=xlab, y=ylab, color=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
     } else {
@@ -382,17 +331,14 @@ smooth_dot_plot <- function(data, x, y, color=NA, xlab="x", ylab="y",
   return(p)  
 }
 
-log_dot_plot <- function(data, x, y, color="#424949", shape="x", xlab="x", 
-                     ylab="y", clab="color", slab="shape", alpha=0.8, 
-                     size=2, title="", colorscheme=NULL)
+log_dot_plot <- function(data, x, y, color=NA, shape="x", alpha=0.8, 
+    size=2, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, color=color), shape=shape) + 
     geom_point(size=size, alpha=alpha) + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     scale_x_log10() +
-    theme_bw() +  
-    labs(x=xlab, y=ylab, color=clab)
+    theme_bw()
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
     } else {
@@ -402,19 +348,16 @@ log_dot_plot <- function(data, x, y, color="#424949", shape="x", xlab="x",
 }
 
 
-loglog_dot_plot <- function(data, x, y, color, alpha=1, xlab, ylab, clab, 
-                        colorscheme=NULL) 
+loglog_dot_plot <- function(data, x, y, color, alpha=1, colorscheme=NULL) 
 {
   p <- ggplot(data=data, aes(x=x, y=y, color=color)) + 
     geom_point(size=1, alpha=alpha) + 
-    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme_bw() + 
     scale_y_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), 
         limits=c(1e-05, 1)) +
     scale_x_log10(breaks=c(1, 0.1, 0.01, 0.001, 0.0001, 1e-04, 1e-05), 
-        limits=c(1e-05, 1)) +
-    labs(x=xlab, y=ylab, color=clab)
+        limits=c(1e-05, 1))
     if (is.null(colorscheme)){
       p <- p + scale_color_viridis(discrete=T, option="viridis")
     } else {
@@ -427,8 +370,7 @@ gather_matrix <- function(data, key, value){
   reshape2:::melt.matrix(data, varnames=key, value.name=value)
 }
 
-heatmap_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y", 
-                         flab="fill", colorscheme=NULL)
+heatmap_plot <- function(data, x, y, fill=NA, colorscheme=NULL)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) +
     geom_tile(color="white") + 
@@ -442,16 +384,12 @@ heatmap_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y",
 }
 
 
-joy_plot <- function(data, x, y, fill=NA, xlab="x", ylab="y", 
-                     flab="fill", title="", colorscheme=NULL,
-                     scale=4)
+joy_plot <- function(data, x, y, fill=NA, colorscheme=NULL, scale=4)
 {
   p <- ggplot(data=data, aes(x=x, y=y, fill=fill)) + 
-    ggtitle(title) + 
     geom_density_ridges(scale=scale) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    theme_bw() +
-    labs(x=xlab, y=ylab, fill=flab)
+    theme_bw()
   if (is.null(colorscheme)){
     p <- p + scale_fill_viridis(option="viridis")
   } else {
