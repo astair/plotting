@@ -8,6 +8,11 @@ library(ggfortify)
 library(gridExtra)
 library(grid)
 
+
+##################
+## COLORSCHEMES ##
+##################
+
 magma <- c("#424949", "#F9A825", "#CD3F0A", "#8A023C")
 redtogreen <- c("#550527", "#A10702", "#F44708", "#F9A113", "#599124")
 greentored <- c("#599124" , "#F9A113", "#F44708", "#A10702", "#550527")
@@ -34,6 +39,20 @@ many <- c("#Ae0031", "#ffbb00", "#198749", "#2d62a3", "#573794","#Ff7708", "#158
     "#bdfd0b", "#b22760", "#2bf49f", "#cb9348", "#9d8303", "#c251a1", "#46adaf", 
     "#a3e3af", "#22bb34", "#6ea3fa", "#260374", "#1c3854", "#405d37", "#c21df3", 
     "#fcea92", "#537f88", "#fd4c18", "#f2d71e", "#fd4c7a")
+cluster_cols <- c("#Ae0031", "#ffbb00", "#4CAF50", 
+    "#2d62a3", "#573794",
+    "#Ff7708", "#15889C", "#ED49B1", "#8E13A2", 
+    "#1B5E20", 
+    "#626567", 
+    "#f47a92", "#F7DC6F", 
+    "#A6ACAF")
+
+
+
+
+#######################
+## UTILITY FUNCTIONS ##
+#######################
 
 insert_minor <- function(major_labs, n_minor) {
   labs <- c(sapply( major_labs, function(x) c(x, rep("", n_minor))))
