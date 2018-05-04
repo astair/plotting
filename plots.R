@@ -8,6 +8,7 @@ library(ggfortify)
 library(gridExtra)
 library(grid)
 
+theme_set(theme_bw())
 
 ##################
 ## COLORSCHEMES ##
