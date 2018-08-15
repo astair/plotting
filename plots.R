@@ -17,7 +17,7 @@ theme_set(theme_bw())
 
 as_matrix <- function(df){
     mat <- as.matrix(df[2:ncol(df)])
-    rowname(mat) <- df[[1]]
+    rownames(mat) <- df[[1]]
     return(mat)
 }
 
