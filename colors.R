@@ -4,6 +4,7 @@
 ######################################################
 
 require(viridis)
+theme_set(theme_bw())
 
 redpink <- "#c2185b"
 purple <- "#7b1fa2"
@@ -49,3 +50,9 @@ cl_types_colors <- c("#Ae0031", "#ffbb00", "#198749", "#573794","#Ff7708", "#158
     "#ED49B1", "#aeb6bf", "#5d6d7e")
 scale_fill_relaxing <- scale_fill_gradient(low = "#fffbd5", high = "#b20a2c")
 scale_color_relaxing <- scale_color_gradient(low = "#fffbd5", high = "#b20a2c")
+
+
+scale_colour_discrete <- function(...) scale_colour_manual(values=many)
+scale_colour_continuous <- function(...) scale_color_distiller(palette="Blues")
+scale_fill_discrete <- function(...) scale_fill_manual(values=many)
+scale_fill_continuous <- function(...) scale_fill_distiller(palette="Blues")
